@@ -1,0 +1,31 @@
+# Dati Fiscali B2B — app a distribuzione custom, installata sul singolo negozio.
+#
+# `client_id` viene compilato da `shopify app config link` al primo collegamento
+# con l'app creata nel Dev Dashboard: non va inventato a mano.
+#
+# `application_url` deve rispondere anche se l'app non ha backend: una theme app
+# extension non rientra fra le estensioni compatibili con le app "extension-only"
+# (confermato da Shopify il 30/07/2026), quindi l'app deve dichiarare un URL.
+# Va bene una pagina statica: non serve alcun server nostro.
+
+name = "Dati Fiscali B2B"
+handle = "dati-fiscali-b2b"
+application_url = "https://francescobonizzi.github.io/shopify-app-solo-piva/"
+embedded = false
+
+[build]
+include_config_on_deploy = true
+
+# Nessuna chiamata all'Admin API: tutto passa dagli endpoint pubblici del carrello.
+[access_scopes]
+scopes = ""
+use_legacy_install_flow = false
+
+[auth]
+redirect_urls = [ "https://francescobonizzi.github.io/shopify-app-solo-piva/" ]
+
+[webhooks]
+api_version = "2026-07"
+
+[pos]
+embedded = false

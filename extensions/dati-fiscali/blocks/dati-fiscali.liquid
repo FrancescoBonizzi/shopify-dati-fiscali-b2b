@@ -1,0 +1,137 @@
+{%- comment -%}
+  Dati Fiscali B2B — app embed block.
+
+  Iniettato in theme.liquid, quindi indipendente dal template: funziona sulla pagina
+  carrello e sul cart drawer senza toccare il codice del tema.
+{%- endcomment -%}
+
+{{ 'dati-fiscali.css' | asset_url | stylesheet_tag }}
+
+<script id="dati-fiscali-config" type="application/json">
+  {
+    "urlValidatori": {{ 'validatori.js' | asset_url | json }},
+    "modalitaColore": {{ block.settings.modalita_colore | json }},
+    "colorePrimario": {{ block.settings.colore_primario | json }},
+    "coloreTestoPrimario": {{ block.settings.colore_testo_primario | json }},
+    "raggioBordi": {{ block.settings.raggio_bordi | json }},
+    "apriSuCarrello": {{ block.settings.apri_su_carrello | json }},
+    "nascondiPagamentiRapidi": {{ block.settings.nascondi_pagamenti_rapidi | json }},
+    "ammettiPa": {{ block.settings.ammetti_pa | json }},
+    "selettoriExtra": {{ block.settings.selettori_extra | json }},
+    "log": {{ block.settings.log_console | json }},
+    "radiceNegozio": {{ routes.root_url | json }}
+  }
+</script>
+
+{% render 'modale-dati-fiscali', block: block %}
+
+<script type="module">
+  import { avvia } from {{ 'dati-fiscali.js' | asset_url | json }};
+  avvia();
+</script>
+
+{% schema %}
+{
+  "name": "Dati fiscali B2B",
+  "target": "body",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Aspetto"
+    },
+    {
+      "type": "select",
+      "id": "modalita_colore",
+      "label": "Colori del modale",
+      "info": "In automatico il modale copia i colori del bottone di check-out del tema.",
+      "options": [
+        { "value": "auto", "label": "Automatico dal tema" },
+        { "value": "manuale", "label": "Scelti qui sotto" }
+      ],
+      "default": "auto"
+    },
+    {
+      "type": "color",
+      "id": "colore_primario",
+      "label": "Colore primario",
+      "info": "Usato se la modalità è manuale, o come ripiego se il tema non è leggibile.",
+      "default": "#121212"
+    },
+    {
+      "type": "color",
+      "id": "colore_testo_primario",
+      "label": "Colore del testo sul primario",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "raggio_bordi",
+      "label": "Raggio dei bordi",
+      "min": 0,
+      "max": 24,
+      "step": 2,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "header",
+      "content": "Testi"
+    },
+    {
+      "type": "text",
+      "id": "titolo",
+      "label": "Titolo del modale",
+      "default": "Dati per la fattura elettronica"
+    },
+    {
+      "type": "textarea",
+      "id": "descrizione",
+      "label": "Testo introduttivo",
+      "default": "Vendiamo esclusivamente ad aziende e professionisti con partita IVA. Questi dati servono per emettere la fattura elettronica."
+    },
+    {
+      "type": "text",
+      "id": "testo_bottone",
+      "label": "Testo del bottone di conferma",
+      "default": "Salva e vai al pagamento"
+    },
+    {
+      "type": "header",
+      "content": "Comportamento"
+    },
+    {
+      "type": "checkbox",
+      "id": "apri_su_carrello",
+      "label": "Apri il modale all'arrivo sulla pagina carrello",
+      "info": "Raccoglie i dati prima ancora che il cliente pensi al check-out.",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "nascondi_pagamenti_rapidi",
+      "label": "Nascondi i pagamenti rapidi finché i dati mancano",
+      "info": "Shop Pay, PayPal, Google Pay e Apple Pay saltano la pagina carrello e quindi il modale.",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "ammetti_pa",
+      "label": "Accetta i codici destinatario a 6 caratteri (Pubblica Amministrazione)",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "selettori_extra",
+      "label": "Selettori CSS aggiuntivi per i bottoni di check-out",
+      "info": "Separati da virgola. Serve solo se il tema usa bottoni non standard.",
+      "default": ""
+    },
+    {
+      "type": "checkbox",
+      "id": "log_console",
+      "label": "Log di diagnostica in console",
+      "default": false
+    }
+  ]
+}
+{% endschema %}

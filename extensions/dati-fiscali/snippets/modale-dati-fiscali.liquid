@@ -1,0 +1,96 @@
+{%- comment -%}
+  Markup del modale. Usa l'elemento nativo <dialog>: focus trap, chiusura con Esc
+  e backdrop sono gestiti dal browser, senza codice nostro.
+{%- endcomment -%}
+
+<dialog id="dati-fiscali-modale" class="df-modale" aria-labelledby="df-titolo">
+  <form method="dialog" class="df-modale__chiudi-form">
+    <button
+      type="submit"
+      class="df-chiudi"
+      value="annulla"
+      aria-label="Chiudi senza salvare"
+    >&times;</button>
+  </form>
+
+  <h2 id="df-titolo" class="df-titolo">
+    {{- block.settings.titolo | default: 'Dati per la fattura elettronica' -}}
+  </h2>
+
+  {%- if block.settings.descrizione != blank -%}
+    <p class="df-descrizione">{{ block.settings.descrizione }}</p>
+  {%- endif -%}
+
+  <form id="df-form" class="df-form" novalidate>
+    <div class="df-campo">
+      <label for="df-ragione-sociale">Ragione sociale <span aria-hidden="true">*</span></label>
+      <input
+        type="text"
+        id="df-ragione-sociale"
+        name="ragioneSociale"
+        autocomplete="organization"
+        required
+        aria-describedby="df-errore-ragioneSociale"
+      >
+      <p class="df-errore" id="df-errore-ragioneSociale" role="alert"></p>
+    </div>
+
+    <div class="df-campo">
+      <label for="df-partita-iva">Partita IVA <span aria-hidden="true">*</span></label>
+      <input
+        type="text"
+        id="df-partita-iva"
+        name="partitaIva"
+        inputmode="numeric"
+        maxlength="16"
+        placeholder="11 cifre"
+        required
+        aria-describedby="df-aiuto-partitaIva df-errore-partitaIva"
+      >
+      <p class="df-aiuto" id="df-aiuto-partitaIva">Solo partita IVA: il codice fiscale a 16 caratteri non è valido per la fattura elettronica.</p>
+      <p class="df-errore" id="df-errore-partitaIva" role="alert"></p>
+    </div>
+
+    <fieldset class="df-recapito">
+      <legend>Recapito per la fattura <span aria-hidden="true">*</span></legend>
+      <p class="df-aiuto" id="df-aiuto-recapito">Indica il codice destinatario SDI oppure la PEC. Se il codice è <code>0000000</code> la PEC è obbligatoria.</p>
+
+      <div class="df-campo">
+        <label for="df-codice-sdi">Codice destinatario SDI</label>
+        <input
+          type="text"
+          id="df-codice-sdi"
+          name="codiceSdi"
+          maxlength="7"
+          autocapitalize="characters"
+          spellcheck="false"
+          aria-describedby="df-errore-codiceSdi"
+        >
+        <p class="df-errore" id="df-errore-codiceSdi" role="alert"></p>
+      </div>
+
+      <div class="df-campo">
+        <label for="df-pec">PEC</label>
+        <input
+          type="email"
+          id="df-pec"
+          name="pec"
+          autocomplete="email"
+          spellcheck="false"
+          aria-describedby="df-errore-pec"
+        >
+        <p class="df-errore" id="df-errore-pec" role="alert"></p>
+      </div>
+
+      <p class="df-errore" id="df-errore-recapito" role="alert"></p>
+    </fieldset>
+
+    <p class="df-errore df-errore--generale" id="df-errore-generale" role="alert"></p>
+
+    <div class="df-azioni">
+      <button type="submit" class="df-bottone" id="df-conferma">
+        {{- block.settings.testo_bottone | default: 'Salva e vai al pagamento' -}}
+      </button>
+    </div>
+  </form>
+</dialog>

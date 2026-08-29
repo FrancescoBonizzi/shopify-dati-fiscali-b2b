@@ -1,0 +1,11 @@
+node_modules/
+.DS_Store
+.env
+.env.*
+dist/
+*.log
+
+# Shopify CLI
+.shopify/
+shopify.app.*.toml
+!shopify.app.toml
