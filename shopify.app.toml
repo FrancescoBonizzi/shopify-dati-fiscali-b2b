@@ -13,9 +13,6 @@ handle = "dati-fiscali-b2b"
 application_url = "https://francescobonizzi.github.io/shopify-app-solo-piva/"
 embedded = false
 
-[build]
-include_config_on_deploy = true
-
 # Nessuna chiamata all'Admin API: tutto passa dagli endpoint pubblici del carrello.
 [access_scopes]
 scopes = ""
