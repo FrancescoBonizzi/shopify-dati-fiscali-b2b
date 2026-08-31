@@ -196,6 +196,18 @@ html[data-df-nascondi-rapidi='1'][data-df-stato='incompleti'] .dynamic-checkout_
   display: none !important;
 }
 
+.df-credito {
+  margin: 0;
+  padding-bottom: 1.25rem;
+  font-size: 0.75rem;
+  text-align: center;
+  color: var(--df-testo-tenue);
+}
+
+.df-credito a {
+  color: inherit;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .df-modale[open] {
     animation: df-entra 160ms ease-out;
