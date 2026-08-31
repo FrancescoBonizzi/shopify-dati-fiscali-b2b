@@ -7,11 +7,11 @@
 # extension non rientra fra le estensioni compatibili con le app "extension-only"
 # (confermato da Shopify il 30/07/2026), quindi l'app deve dichiarare un URL.
 # Punta a una pagina statica su GitHub Pages: nessun server da mantenere.
-# Sorgente: github.com/FrancescoBonizzi/dati-fiscali-b2b-app
+# La pagina e' in docs/ di questo stesso repo, pubblicata da GitHub Pages.
 
 name = "Dati Fiscali B2B"
 handle = "dati-fiscali-b2b"
-application_url = "https://francescobonizzi.github.io/dati-fiscali-b2b-app/"
+application_url = "https://francescobonizzi.github.io/shopify-dati-fiscali-b2b/"
 embedded = false
 
 # Nessuna chiamata all'Admin API: tutto passa dagli endpoint pubblici del carrello.
@@ -20,7 +20,7 @@ scopes = ""
 use_legacy_install_flow = false
 
 [auth]
-redirect_urls = [ "https://francescobonizzi.github.io/dati-fiscali-b2b-app/" ]
+redirect_urls = [ "https://francescobonizzi.github.io/shopify-dati-fiscali-b2b/" ]
 
 [webhooks]
 api_version = "2026-07"
