@@ -1,6 +1,7 @@
-api_version = "2026-07"
+api_version = "2026-10"
 
 [[extensions]]
 type = "theme"
 name = "Dati Fiscali B2B"
 handle = "dati-fiscali"
+uid = "2876324d-49ee-ce2b-2837-2f65474f9b2e6842594d"

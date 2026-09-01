@@ -1,16 +1,21 @@
 # Dati Fiscali B2B — app a distribuzione custom, installata sul singolo negozio.
 #
-# `client_id` viene compilato da `shopify app config link` al primo collegamento
-# con l'app creata nel Dev Dashboard: non va inventato a mano.
-#
 # `application_url` deve rispondere anche se l'app non ha backend: una theme app
 # extension non rientra fra le estensioni compatibili con le app "extension-only"
 # (confermato da Shopify il 30/07/2026), quindi l'app deve dichiarare un URL.
 # Punta a una pagina statica su GitHub Pages: nessun server da mantenere.
 # La pagina e' in docs/ di questo stesso repo, pubblicata da GitHub Pages.
+#
+# `embedded = false` e' obbligatorio: la pagina servita da GitHub Pages e' statica
+# e non usa App Bridge, quindi non puo' essere caricata in un iframe dell'admin.
+#
+# Attenzione: `shopify app config link` sovrascrive questo file con la
+# configurazione remota. Dopo ogni link, ricontrollare application_url,
+# embedded e redirect_urls prima di committare.
 
 name = "Dati Fiscali B2B"
 handle = "dati-fiscali-b2b"
+client_id = "931c59061514ca6fc0045587ab78b23f"
 application_url = "https://francescobonizzi.github.io/shopify-dati-fiscali-b2b/"
 embedded = false
 
@@ -23,7 +28,15 @@ use_legacy_install_flow = false
 redirect_urls = [ "https://francescobonizzi.github.io/shopify-dati-fiscali-b2b/" ]
 
 [webhooks]
-api_version = "2026-07"
+api_version = "2026-10"
 
 [pos]
 embedded = false
+
+[build]
+# La configurazione locale ha la precedenza su quella della dashboard al deploy.
+include_config_on_deploy = true
+# Disattivato di proposito: con `true`, `shopify app dev` sostituisce
+# application_url con l'URL del tunnel temporaneo, e il deploy successivo
+# lo spedirebbe in produzione.
+automatically_update_urls_on_dev = false
