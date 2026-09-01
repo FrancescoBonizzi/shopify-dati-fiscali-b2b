@@ -97,6 +97,10 @@ const MUTAZIONI_CARRELLO = /\/cart\/(add|change|update|clear)(\.js)?(\?|$)/;
  * Avvolgiamo fetch e XMLHttpRequest senza alterarne il comportamento.
  */
 function osservaMutazioniCarrello() {
+  // Idempotente: avvolgere due volte moltiplicherebbe le letture del carrello.
+  if (window.__datiFiscaliOsserva) return;
+  window.__datiFiscaliOsserva = true;
+
   const fetchOriginale = window.fetch;
   if (typeof fetchOriginale === 'function') {
     window.fetch = function (...argomenti) {
