@@ -66,6 +66,8 @@ export async function avvia() {
     document.documentElement.dataset.dfNascondiRapidi = '1';
   }
 
+  osservaMutazioniCarrello();
+
   form.addEventListener('submit', alSalvataggio);
   modale.addEventListener('close', () => {
     if (modale.returnValue === 'annulla') log('modale chiuso senza salvare');
@@ -82,6 +84,48 @@ export async function avvia() {
   window.addEventListener('pageshow', (e) => {
     if (e.persisted) aggiornaStato();
   });
+}
+
+/* ------------------------------------------------- mutazioni del carrello */
+
+const MUTAZIONI_CARRELLO = /\/cart\/(add|change|update|clear)(\.js)?(\?|$)/;
+
+/**
+ * I temi aggiungono al carrello via AJAX senza ricaricare la pagina: senza
+ * questo, lo stato resta quello del primo caricamento e la CSS continua a
+ * mostrare i pagamenti rapidi anche dopo che il carrello si e' riempito.
+ * Avvolgiamo fetch e XMLHttpRequest senza alterarne il comportamento.
+ */
+function osservaMutazioniCarrello() {
+  const fetchOriginale = window.fetch;
+  if (typeof fetchOriginale === 'function') {
+    window.fetch = function (...argomenti) {
+      const risultato = fetchOriginale.apply(this, argomenti);
+      try {
+        const primo = argomenti[0];
+        const url = String((primo && primo.url) || primo || '');
+        if (MUTAZIONI_CARRELLO.test(url) && typeof risultato?.then === 'function') {
+          risultato.then(() => aggiornaStato()).catch(() => {});
+        }
+      } catch (errore) {
+        // Non deve mai rompere il fetch del tema.
+      }
+      return risultato;
+    };
+  }
+
+  const apriOriginale = XMLHttpRequest.prototype.open;
+  const inviaOriginale = XMLHttpRequest.prototype.send;
+  XMLHttpRequest.prototype.open = function (metodo, url, ...resto) {
+    this.__dfUrl = String(url ?? '');
+    return apriOriginale.call(this, metodo, url, ...resto);
+  };
+  XMLHttpRequest.prototype.send = function (...argomenti) {
+    if (MUTAZIONI_CARRELLO.test(this.__dfUrl || '')) {
+      this.addEventListener('load', () => aggiornaStato());
+    }
+    return inviaOriginale.apply(this, argomenti);
+  };
 }
 
 /* ------------------------------------------------------------------ config */
@@ -119,18 +163,23 @@ async function aggiornaStato() {
     // Se il carrello non e' leggibile non blocchiamo il negozio: il gate e' UX,
     // non sicurezza, e un errore di rete non deve impedire di comprare.
     console.warn('[dati-fiscali] carrello non leggibile', errore);
-    stato = { ok: true, dati: {} };
+    stato = { ok: true, dati: {}, datiOk: true };
     document.documentElement.dataset.dfStato = 'completi';
+    document.documentElement.dataset.dfDati = 'validi';
     return stato;
   }
 
   const dati = datiDaAttributi(carrello.attributes);
+  const datiOk = validatori.validaDatiFiscali(dati, { ammettiPa: !!config.ammettiPa }).ok;
   // Carrello vuoto: non c'e' nulla da bloccare.
-  const ok = !carrello.item_count
-    || validatori.validaDatiFiscali(dati, { ammettiPa: !!config.ammettiPa }).ok;
-  stato = { ok, dati };
+  const ok = !carrello.item_count || datiOk;
+  stato = { ok, dati, datiOk };
 
-  document.documentElement.dataset.dfStato = stato.ok ? 'completi' : 'incompleti';
+  document.documentElement.dataset.dfStato = ok ? 'completi' : 'incompleti';
+  // I pagamenti rapidi vanno nascosti in base alla validita' dei dati, non al
+  // verdetto del gate: "Compra ora" non passa dal carrello, quindi a carrello
+  // vuoto il gate dice ok ma quel bottone porterebbe comunque al check-out.
+  document.documentElement.dataset.dfDati = datiOk ? 'validi' : 'mancanti';
   log('stato', stato);
   return stato;
 }

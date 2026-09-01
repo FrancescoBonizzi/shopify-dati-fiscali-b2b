@@ -188,11 +188,16 @@
 }
 
 /* Pagamenti rapidi: saltano la pagina carrello, quindi saltano il modale.
-   Meglio non mostrarli finché i dati mancano che farli fallire al check-out. */
-html[data-df-nascondi-rapidi='1'][data-df-stato='incompleti'] .shopify-payment-button,
-html[data-df-nascondi-rapidi='1'][data-df-stato='incompleti'] .shopify-cleanslate,
-html[data-df-nascondi-rapidi='1'][data-df-stato='incompleti'] [data-shopify='dynamic-checkout-cart'],
-html[data-df-nascondi-rapidi='1'][data-df-stato='incompleti'] .dynamic-checkout__content {
+   Meglio non mostrarli finché i dati mancano che farli fallire al check-out.
+
+   Si guarda data-df-dati, non data-df-stato: il gate considera valido un
+   carrello vuoto, ma "Compra ora" porta al check-out senza passare dal
+   carrello. Ed e' un :not(), non un ='mancanti': cosi' restano nascosti anche
+   prima che la lettura del carrello abbia risposto. */
+html[data-df-nascondi-rapidi='1']:not([data-df-dati='validi']) .shopify-payment-button,
+html[data-df-nascondi-rapidi='1']:not([data-df-dati='validi']) .shopify-cleanslate,
+html[data-df-nascondi-rapidi='1']:not([data-df-dati='validi']) [data-shopify='dynamic-checkout-cart'],
+html[data-df-nascondi-rapidi='1']:not([data-df-dati='validi']) .dynamic-checkout__content {
   display: none !important;
 }
 
