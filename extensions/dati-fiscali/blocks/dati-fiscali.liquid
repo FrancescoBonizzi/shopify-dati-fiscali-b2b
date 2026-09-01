@@ -17,7 +17,7 @@
     "apriSuCarrello": {{ block.settings.apri_su_carrello | json }},
     "nascondiPagamentiRapidi": {{ block.settings.nascondi_pagamenti_rapidi | json }},
     "ammettiPa": {{ block.settings.ammetti_pa | json }},
-    "selettoriExtra": {{ block.settings.selettori_extra | json }},
+    "selettoriExtra": {{ block.settings.selettori_extra | default: '' | json }},
     "log": {{ block.settings.log_console | json }},
     "radiceNegozio": {{ routes.root_url | json }}
   }
@@ -133,8 +133,7 @@
       "type": "text",
       "id": "selettori_extra",
       "label": "Selettori CSS aggiuntivi per i bottoni di check-out",
-      "info": "Separati da virgola. Serve solo se il tema usa bottoni non standard.",
-      "default": ""
+      "info": "Separati da virgola. Serve solo se il tema usa bottoni non standard."
     },
     {
       "type": "checkbox",
