@@ -194,9 +194,19 @@
    carrello vuoto, ma "Compra ora" porta al check-out senza passare dal
    carrello. Ed e' un :not(), non un ='mancanti': cosi' restano nascosti anche
    prima che la lettura del carrello abbia risposto. */
-html[data-df-nascondi-rapidi='1']:not([data-df-dati='validi']) .shopify-payment-button,
+/* "Compra ora" della scheda prodotto: crea un check-out dal form del prodotto
+   senza passare dal carrello, quindi gli attributi fiscali non ci finirebbero
+   mai, nemmeno se il cliente li avesse compilati. Va nascosto sempre. */
+html[data-df-nascondi-rapidi='1'] .shopify-payment-button {
+  display: none !important;
+}
+
+/* Wallet della pagina carrello: partono dal carrello esistente, quindi si
+   portano dietro gli attributi. Si nascondono solo finche' i dati mancano,
+   e ricompaiono appena sono validi. */
 html[data-df-nascondi-rapidi='1']:not([data-df-dati='validi']) .shopify-cleanslate,
 html[data-df-nascondi-rapidi='1']:not([data-df-dati='validi']) [data-shopify='dynamic-checkout-cart'],
+html[data-df-nascondi-rapidi='1']:not([data-df-dati='validi']) shopify-accelerated-checkout-cart,
 html[data-df-nascondi-rapidi='1']:not([data-df-dati='validi']) .dynamic-checkout__content {
   display: none !important;
 }
