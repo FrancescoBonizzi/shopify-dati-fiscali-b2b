@@ -34,8 +34,6 @@ api_version = "2026-10"
 embedded = false
 
 [build]
-# La configurazione locale ha la precedenza su quella della dashboard al deploy.
-include_config_on_deploy = true
 # Disattivato di proposito: con `true`, `shopify app dev` sostituisce
 # application_url con l'URL del tunnel temporaneo, e il deploy successivo
 # lo spedirebbe in produzione.

@@ -30,15 +30,17 @@
   avvia();
 </script>
 
+{%- comment -%}
+  Shopify ammette al massimo 6 settings "non interattivi" (header e paragraph)
+  per blocco: superarli fa fallire `shopify app deploy` con
+  "settings: must have a maximum of 6 for non-interactive settings".
+  Adesso siamo esattamente a 6: per aggiungere un header serve toglierne un altro.
+{%- endcomment -%}
 {% schema %}
 {
   "name": "Dati fiscali B2B",
   "target": "body",
   "settings": [
-    {
-      "type": "header",
-      "content": "Dati Fiscali B2B · Imagine Software"
-    },
     {
       "type": "paragraph",
       "content": "Raccolta obbligatoria di ragione sociale, partita IVA e codice SDI o PEC prima del check-out, con validazione reale della partita IVA."
@@ -146,7 +148,7 @@
     },
     {
       "type": "paragraph",
-      "content": "App sviluppata su misura da Imagine Software — imaginesoftware.it"
+      "content": "App sviluppata su misura da Imagine Software — imaginesoftware.it · Assistenza: info@imaginesoftware.it"
     },
     {
       "type": "checkbox",
@@ -154,10 +156,6 @@
       "label": "Mostra la firma nel modale",
       "info": "Aggiunge una riga discreta \"a cura di Imagine Software\" in fondo al modale. Visibile ai clienti del negozio: [imaginesoftware.it](https://imaginesoftware.it)",
       "default": false
-    },
-    {
-      "type": "paragraph",
-      "content": "Assistenza: info@imaginesoftware.it"
     }
   ]
 }
