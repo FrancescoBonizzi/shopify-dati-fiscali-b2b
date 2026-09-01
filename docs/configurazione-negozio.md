@@ -17,16 +17,30 @@ la seconda è il dato che usi in fattura.
 
 ## 2. Chiudere i percorsi che saltano il carrello
 
-I pagamenti rapidi portano dalla scheda prodotto direttamente al check-out, saltando la
-pagina carrello e quindi il modale.
+I pagamenti rapidi non sono tutti uguali, e trattarli allo stesso modo è un errore.
 
-- **Impostazioni → Check-out → Pagamenti accelerati**: disattivare Shop Pay, PayPal,
-  Google Pay, Apple Pay.
-- **Tema**: rimuovere `{{ form | payment_button }}` dal template prodotto.
-  In alternativa l'app li nasconde via CSS finché i dati mancano (impostazione
-  *"Nascondi i pagamenti rapidi"*), ma disattivarli del tutto è più pulito.
-- **Canale Shop**: valutare la disattivazione. L'app Shop ha un proprio percorso
-  d'acquisto che non passa dal tema.
+**"Compra ora" sulla scheda prodotto** (`.shopify-payment-button`) crea un check-out
+partendo dal form del prodotto, **senza passare dal carrello**: gli attributi fiscali non
+ci arriverebbero mai, nemmeno se il cliente li avesse compilati poco prima. Va nascosto
+**sempre**, ed è quello che fa l'app quando *"Nascondi i pagamenti rapidi"* è attivo. Per
+toglierlo alla radice: disattivare il pulsante di pagamento dinamico nelle impostazioni
+della sezione prodotto del tema, oppure rimuovere `{{ form | payment_button }}` dal
+template.
+
+**I wallet della pagina carrello** (`shopify-accelerated-checkout-cart`) partono invece
+dal carrello esistente, quindi si portano dietro gli attributi. L'app li nasconde solo
+finché i dati mancano e li rimostra appena sono validi: disattivarli del tutto non serve.
+
+> Da verificare con un ordine vero, prima di fidarsene: che gli attributi del carrello
+> arrivino davvero fino all'ordine anche passando dal wallet. Se non arrivassero, vanno
+> nascosti sempre come il "Compra ora".
+
+Per disattivarli lato server: **Impostazioni → Pagamenti → Check-out accelerati** — sotto
+*Pagamenti*, non sotto *Check-out*. Attenzione: toglie il wallet anche dal check-out vero
+e proprio, dove è legittimo e utile. Raramente ne vale la pena.
+
+**Canale Shop**: valutare la disattivazione. L'app Shop ha un proprio percorso d'acquisto
+che non passa dal tema.
 
 ## 3. Verifiche sul tema
 
@@ -51,15 +65,36 @@ Impostazioni disponibili lì: colori (automatici dal tema o scelti a mano), test
 apertura automatica sulla pagina carrello, gestione dei pagamenti rapidi, codici destinatario
 a 6 caratteri per la Pubblica Amministrazione.
 
-## 6. Cutover da GetFiscal
+## 6. Collaudo e cutover
 
-1. Provare tutto su un tema duplicato non pubblicato.
-2. Attivare l'app embed sul tema live.
-3. Fare un ordine reale di prova e verificare che i dati compaiano nei **Dettagli aggiuntivi**
-   dell'ordine.
-4. **Solo dopo**: disinstallare GetFiscal e rimuovere il CSS che nascondeva il campo
-   codice fiscale.
-5. Non toccare gli ordini storici: gli attributi `getfiscal_*` già acquisiti restano dove sono.
+`shopify app dev` richiede un development store o una sandbox Plus: su un negozio di
+produzione non si può usare. Il collaudo si fa quindi sul negozio reale, ma su un tema che
+nessun cliente vede.
+
+1. **Negozio online → Temi → ⋯ sul tema live → Duplica.**
+2. Sul duplicato: **⋯ → Modifica → Impostazioni tema → App embeds** → attivare
+   *Dati fiscali B2B*, e **disattivare l'app embed della vecchia app**. Il duplicato ha
+   ereditato anche quella: con due modali attivi si contendono il click sul bottone di
+   check-out e i risultati del test non valgono niente.
+3. Salvare, aprire l'**Anteprima** e percorrere la lista di test manuali del README,
+   partendo dal test 0 (aggiungi, cambia quantità, rimuovi).
+4. **Pubblicare il duplicato.** Un'unica azione manda live esattamente la configurazione
+   collaudata, e il vecchio tema resta nella libreria come rollback: se qualcosa va storto
+   lo si ripubblica in dieci secondi. Verificare prima che nessuno abbia modificato il tema
+   live dopo la duplicazione, altrimenti quelle modifiche si perdono.
+5. Fare un **ordine reale di prova** e verificare che i dati compaiano nei
+   **Dettagli aggiuntivi** dell'ordine.
+6. **Solo dopo**: disinstallare la vecchia app e ripulire il CSS lasciato da lei nel tema
+   (tipicamente regole che nascondevano campi del suo modale, che ora puntano a elementi
+   inesistenti).
+7. Non toccare gli ordini storici: gli attributi `getfiscal_*` già acquisiti restano dove
+   sono.
+
+Il rollback dell'estensione è indipendente da quello del tema, e altrettanto rapido:
+
+```bash
+shopify app release --version=<versione-precedente> --allow-updates
+```
 
 ## Opzionale — rete di sicurezza con Shopify Flow
 

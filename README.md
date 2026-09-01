@@ -19,6 +19,13 @@ elettronica che viene scartata, e il costo lo paghi in tempo di amministrazione.
 - Regola SDI/PEC della fatturazione elettronica, incluso `0000000` — formalmente valido,
   ma rende la PEC obbligatoria.
 - Blocco di tutti i punti di uscita verso il check-out finché i dati non sono validi.
+- Pagamenti rapidi gestiti in due regimi distinti: il **"Compra ora"** della scheda
+  prodotto crea un check-out dal form del prodotto **senza passare dal carrello**, quindi
+  gli attributi non ci arriverebbero mai e va nascosto *sempre*; i **wallet della pagina
+  carrello** partono dal carrello esistente e si portano dietro gli attributi, quindi
+  vengono nascosti solo finché i dati mancano. Da qui i due attributi su `<html>`:
+  `data-df-stato` (verdetto del gate, considera valido il carrello vuoto) e
+  `data-df-dati` (validità pura dei dati, è quello che guarda la CSS dei wallet).
 - Colori copiati automaticamente dal bottone di check-out del tema, con override manuale
   nelle impostazioni dell'app embed block.
 
@@ -96,14 +103,47 @@ ripartono da zero.
 ## Sviluppo
 
 ```bash
-npm test                 # validatori
-shopify app config link  # collega l'app creata nel Dev Dashboard (compila client_id)
-shopify app dev          # sviluppo su un tema non pubblicato del negozio
-shopify app deploy       # rilascia una nuova versione
+npm test                                              # validatori
+shopify app config link                               # collega l'app del Dev Dashboard
+shopify app deploy --no-release                       # crea e valida una versione
+shopify app release --version=<nome> --allow-updates  # la manda live
 ```
 
 Nessuna dipendenza a runtime, nessun build step: gli asset vanno sulla CDN di Shopify
 così come sono.
+
+**`shopify app dev` non serve qui.** Richiede un development store o una sandbox Plus, e
+un negozio di produzione non è né l'uno né l'altro. Il collaudo si fa su un **tema
+duplicato non pubblicato** del negozio reale, che è anche l'unico modo di verificare i
+selettori del tema vero: vedi [docs/configurazione-negozio.md](docs/configurazione-negozio.md).
+
+**Le versioni dell'estensione non sono per-tema.** La versione rilasciata viene servita a
+tutti i temi che hanno l'app embed attivo, quindi non esiste modo di provarne una in
+produzione senza rilasciarla. Il rollback è però immediato:
+
+```bash
+shopify app release --version=<versione-precedente> --allow-updates
+```
+
+**`shopify app config link` sovrascrive `shopify.app.toml`** con la configurazione remota,
+commenti compresi: non aggiunge solo il `client_id`. Dopo ogni link ricontrollare
+`embedded`, `application_url` e `redirect_urls` con `git diff` prima di committare. Se il
+CLI scrive `[build] dev_store_url`, va rimosso: nomina il negozio del cliente, e questo
+repo è pubblico.
+
+### Trappole della validazione al deploy
+
+Errori che il CLI segnala solo al momento del rilascio, tutti già inciampati una volta:
+
+- **`extensions/*/locales/` deve esistere**, anche vuota. Se manca, il theme check muore
+  con `ENOENT` — e il deploy *prosegue lo stesso*, quindi l'estensione finisce in
+  produzione senza essere mai stata controllata.
+- **Massimo 6 settings non interattivi** (`header` e `paragraph` sommati) per blocco.
+  Lo schema attuale è esattamente a 6: per aggiungere un header bisogna toglierne un altro.
+- **Un setting non può avere `"default": ""`**. Si omette la chiave e si mette
+  `| default: ''` nel Liquid che la consuma.
+- **In ambiente non interattivo** servono `--no-release`, `--allow-updates` o
+  `--allow-deletes`: senza, il comando si rifiuta di partire. `--force` non esiste.
 
 Un'app a distribuzione custom si installa su **un solo negozio** (più negozi solo nella
 stessa organizzazione Plus), e la scelta della distribuzione è definitiva. Per un secondo
