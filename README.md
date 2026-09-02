@@ -144,6 +144,10 @@ Errori che il CLI segnala solo al momento del rilascio, tutti già inciampati un
   `| default: ''` nel Liquid che la consuma.
 - **In ambiente non interattivo** servono `--no-release`, `--allow-updates` o
   `--allow-deletes`: senza, il comando si rifiuta di partire. `--force` non esiste.
+- **Cambiare il `default` di un setting non tocca i temi già configurati.** Il valore
+  resta quello salvato nelle impostazioni del tema: il default vale solo per chi
+  installa da zero. Per far sparire davvero un testo da un negozio esistente bisogna
+  svuotare il campo nel theme editor.
 
 Un'app a distribuzione custom si installa su **un solo negozio** (più negozi solo nella
 stessa organizzazione Plus), e la scelta della distribuzione è definitiva. Per un secondo
