@@ -26,7 +26,7 @@
 
     <form id="df-form" class="df-form" novalidate>
       <div class="df-campo">
-        <label for="df-ragione-sociale">Ragione sociale <span aria-hidden="true">*</span></label>
+        <label for="df-ragione-sociale">Ragione sociale</label>
         <input
           type="text"
           id="df-ragione-sociale"
@@ -39,7 +39,7 @@
       </div>
 
       <div class="df-campo">
-        <label for="df-partita-iva">Partita IVA <span aria-hidden="true">*</span></label>
+        <label for="df-partita-iva">Partita IVA</label>
         <input
           type="text"
           id="df-partita-iva"
@@ -48,15 +48,14 @@
           maxlength="16"
           placeholder="11 cifre"
           required
-          aria-describedby="df-aiuto-partitaIva df-errore-partitaIva"
+          aria-describedby="df-errore-partitaIva"
         >
-        <p class="df-aiuto" id="df-aiuto-partitaIva">Solo partita IVA: il codice fiscale a 16 caratteri non è valido per la fattura elettronica.</p>
         <p class="df-errore" id="df-errore-partitaIva" role="alert"></p>
       </div>
 
-      <fieldset class="df-recapito">
-        <legend>Recapito per la fattura <span aria-hidden="true">*</span></legend>
-        <p class="df-aiuto" id="df-aiuto-recapito">Indica il codice destinatario SDI oppure la PEC. Se il codice è <code>0000000</code> la PEC è obbligatoria.</p>
+      <fieldset class="df-recapito" aria-describedby="df-errore-recapito">
+        <legend>Recapito per la fattura</legend>
+        <p class="df-errore" id="df-errore-recapito" role="alert"></p>
 
         <div class="df-campo">
           <label for="df-codice-sdi">Codice destinatario SDI</label>
@@ -72,6 +71,8 @@
           <p class="df-errore" id="df-errore-codiceSdi" role="alert"></p>
         </div>
 
+        <p class="df-oppure">oppure</p>
+
         <div class="df-campo">
           <label for="df-pec">PEC</label>
           <input
@@ -85,7 +86,6 @@
           <p class="df-errore" id="df-errore-pec" role="alert"></p>
         </div>
 
-        <p class="df-errore" id="df-errore-recapito" role="alert"></p>
       </fieldset>
 
       <p class="df-errore df-errore--generale" id="df-errore-generale" role="alert"></p>
