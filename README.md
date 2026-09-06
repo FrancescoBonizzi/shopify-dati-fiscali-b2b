@@ -1,3 +1,5 @@
+<img src="docs/logo-dati-fiscali-b2b.png" alt="" width="96" align="right">
+
 # Dati Fiscali B2B — app Shopify
 
 Rende obbligatori i dati per la fattura elettronica prima del check-out di un negozio
@@ -67,6 +69,7 @@ extensions/dati-fiscali/          theme app extension (app embed block)
   assets/dati-fiscali.css
 test/                             test dei validatori (node:test, nessuna dipendenza)
 docs/                             checklist delle impostazioni admin + pagina GitHub Pages
+  logo-dati-fiscali-b2b.png       icona dell'app, 1200×1200: è quella da caricare nel Dev Dashboard
 ```
 
 `validatori.js` non tocca il DOM: è importato dal modale nello storefront **e** dai test

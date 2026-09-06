@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Dati Fiscali B2B — Imagine Software</title>
-<link rel="icon" href="app-icon.png">
+<link rel="icon" href="logo-dati-fiscali-b2b.png">
 <style>
   :root {
     --navy: #182133;
@@ -27,11 +27,15 @@
   }
   main { width: min(38rem, 100%); }
   .logo { width: min(17rem, 80%); height: auto; display: block; margin-bottom: 2.5rem; }
+  .intestazione { display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1.25rem; }
+  .icona { width: 5.5rem; height: 5.5rem; border-radius: 22%; flex: none; }
   h1 { font-size: clamp(1.5rem, 4vw, 2rem); line-height: 1.2; margin: 0 0 .5rem; }
   .occhiello {
     text-transform: uppercase; letter-spacing: .12em; font-size: .75rem;
     font-weight: 700; color: var(--ciano); margin: 0 0 .75rem;
   }
+  .intestazione h1 { margin: 0; }
+  .intestazione .occhiello { margin-bottom: .25rem; }
   p { margin: 0 0 1.125rem; color: var(--testo-tenue); }
   p.chiaro { color: var(--testo); }
   ul { margin: 0 0 1.5rem; padding-left: 1.1rem; color: var(--testo-tenue); }
@@ -56,8 +60,13 @@
 <main>
   <img class="logo" src="logo-imagine-software.png" alt="Imagine Software" width="981" height="300">
 
-  <p class="occhiello">App Shopify su misura</p>
-  <h1>Dati Fiscali B2B</h1>
+  <div class="intestazione">
+    <img class="icona" src="logo-dati-fiscali-b2b.png" alt="" width="1200" height="1200">
+    <div>
+      <p class="occhiello">App Shopify su misura</p>
+      <h1>Dati Fiscali B2B</h1>
+    </div>
+  </div>
 
   <p class="chiaro">
     Rende obbligatori i dati per la fattura elettronica prima del check-out:
