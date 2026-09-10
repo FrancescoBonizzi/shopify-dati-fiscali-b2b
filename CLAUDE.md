@@ -21,7 +21,10 @@ produzione. Il collaudo si fa su un tema duplicato non pubblicato, oppure dal vi
 
 ## Consegna
 
-- Si committa **direttamente su `main`**. Niente branch secondari, niente pull request.
+- Si committa **direttamente su `main`**. Niente branch secondari, niente pull request:
+  un solo sviluppatore, nessuna revisione, i branch sono solo attrito. Se il lavoro si
+  trova su un altro branch, va riportato su `main` in fast-forward e il branch va
+  cancellato, senza chiedere.
 - **Nessuna riga di attribuzione** nei messaggi di commit.
 - Il messaggio di commit dice *perché*, non *cosa*: il diff il cosa lo mostra già.
 - **Il repo è pubblico.** Non ci deve mai finire il nome del negozio del cliente. Se
@@ -102,6 +105,10 @@ e va nascosto *sempre*. I wallet della pagina carrello partono dal carrello esis
 si portano dietro gli attributi, quindi si nascondono solo finché i dati mancano. Da qui
 i due attributi su `<html>`: `data-df-stato` (verdetto del gate, un carrello vuoto è
 valido) e `data-df-dati` (validità pura dei dati, è quello che guarda la CSS dei wallet).
+Usare `data-df-stato` per i wallet aprirebbe un bypass a carrello vuoto, dove il gate
+risponde "ok" perché non c'è niente da bloccare. Ogni selettore di wallet nuovo va prima
+classificato in una delle due categorie. **Resta da verificare con un ordine vero** che
+Shop Pay dal carrello porti davvero gli attributi fino all'ordine.
 
 **`tipo_cliente: 'azienda'` è il valore che la versione 1.0.0 scriveva per tutti.**
 Tenerlo come valore delle società fa sì che i carrelli già compilati restino validi a
@@ -136,4 +143,11 @@ importato sia dallo storefront sia dai test Node. Va tenuto così.
 - Unità metriche decimali.
 - **UI: prima si toglie testo, poi si comprime.** Se qualcosa non ci sta, si cerca la
   prosa ridondante prima di stringere le spaziature o allargare il modale. I messaggi
-  d'errore spesso dicono già quello che una riga di spiegazione ripete.
+  d'errore spesso dicono già quello che una riga di spiegazione ripete. Densità visiva e
+  quantità di testo sono due problemi diversi: comprimere risolve il secondo peggiorando
+  il primo. Quando lo spazio si recupera, va restituito all'aria, non riempito.
+- **Comunicazione strutturale al posto della prosa**: un "oppure" fra due campi dice da
+  solo che ne basta uno, e costa una riga di testo in meno.
+- **Nel modale non si reintroducono filetti orizzontali né grassetti sulle etichette.**
+  I gruppi si fanno con lo sfondo dei pannelli, il grassetto è solo del titolo, e su
+  mobile i bordi restano più stretti che su desktop.
