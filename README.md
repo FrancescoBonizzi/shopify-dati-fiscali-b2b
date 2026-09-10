@@ -36,6 +36,10 @@ elettronica che viene scartata, e il costo lo paghi in tempo di amministrazione.
   vengono nascosti solo finché i dati mancano. Da qui i due attributi su `<html>`:
   `data-df-stato` (verdetto del gate, considera valido il carrello vuoto) e
   `data-df-dati` (validità pura dei dati, è quello che guarda la CSS dei wallet).
+- Campi precompilati dal browser per **90 giorni** dall'ultimo salvataggio, poi si
+  riparte da vuoti. È solo una comodità per chi riordina: il gate guarda gli attributi
+  del carrello, non questa memoria, quindi a ogni carrello nuovo il modale si apre e
+  chiede conferma comunque.
 - Colori copiati automaticamente dal bottone di check-out del tema, con override manuale
   nelle impostazioni dell'app embed block.
 
@@ -107,10 +111,6 @@ statica, senza script né richieste esterne, pubblicata da GitHub Pages.
 | `pec` | minuscolo |
 | `dati_fiscali_validati` | `1`, scritto **solo** dopo che il validatore è passato |
 | `dati_fiscali_versione` | versione del validatore che ha approvato i dati |
-
-Il modale precompila anche dalle vecchie chiavi `getfiscal_*`, così i carrelli già aperti
-al momento della migrazione da [GetFiscal](https://apps.shopify.com/getfiscal) non
-ripartono da zero.
 
 `azienda` è anche il valore che la versione 1.0.0 scriveva per tutti: tenerlo come valore
 delle società significa che i carrelli già compilati restano validi quando esce una

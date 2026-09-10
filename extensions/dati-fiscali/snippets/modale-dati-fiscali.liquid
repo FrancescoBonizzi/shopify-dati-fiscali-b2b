@@ -28,15 +28,15 @@
       {%- comment -%}
         Il tipo di cliente viene per primo perché governa i campi sotto: le società
         hanno il codice fiscale uguale alla partita IVA, le persone fisiche no.
-        Nessuna opzione preselezionata di proposito: un default "Società" verrebbe
-        accettato per inerzia proprio da chi stiamo cercando di intercettare.
+        "Società" parte selezionato perché è il caso della grande maggioranza dei
+        clienti; chi è ditta individuale deve accorgersene e cambiare opzione.
       {%- endcomment -%}
       <fieldset class="df-tipo" aria-describedby="df-errore-tipoCliente">
         <legend>Tipo di cliente</legend>
 
         <div class="df-scelte">
           <label class="df-scelta">
-            <input type="radio" name="tipoCliente" value="azienda">
+            <input type="radio" name="tipoCliente" value="azienda" checked>
             <span>Società</span>
           </label>
 
@@ -46,6 +46,10 @@
           </label>
         </div>
 
+        {%- comment -%}
+          Con un'opzione preselezionata dal form non arriva mai un tipo mancante;
+          resta per l'altra strada del validatore, quella sui dati gia' nel carrello.
+        {%- endcomment -%}
         <p class="df-errore" id="df-errore-tipoCliente" role="alert"></p>
       </fieldset>
 
@@ -96,6 +100,8 @@
         >
         <p class="df-errore" id="df-errore-codiceFiscale" role="alert"></p>
       </div>
+
+      <hr class="df-separatore">
 
       <fieldset class="df-recapito" aria-describedby="df-errore-recapito">
         <legend>Recapito per la fattura</legend>

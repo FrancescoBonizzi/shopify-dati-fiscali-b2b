@@ -16,14 +16,6 @@ const CHIAVI = {
   versione: 'dati_fiscali_versione',
 };
 
-/** Chiavi della vecchia app GetFiscal: usate solo per precompilare il modale. */
-const CHIAVI_LEGACY = {
-  ragioneSociale: 'getfiscal_company',
-  partitaIva: 'getfiscal_vat',
-  codiceSdi: 'getfiscal_sdi',
-  pec: 'getfiscal_pec',
-};
-
 /**
  * Solo i campi testuali. Il gruppo radio del tipo cliente sta fuori di proposito:
  * form.elements.namedItem() restituisce una RadioNodeList, che non ha setAttribute
@@ -33,6 +25,14 @@ const CAMPI = ['ragioneSociale', 'partitaIva', 'codiceFiscale', 'codiceSdi', 'pe
 const CHIAVE_LOCALE = 'dati-fiscali-b2b';
 
 const TIPO_DITTA_INDIVIDUALE = 'ditta_individuale';
+
+/**
+ * Quanto vale la precompilazione salvata nel browser. Oltre, i campi ripartono vuoti:
+ * a distanza di mesi un recapito o una ragione sociale possono essere cambiati, e i
+ * campi gia' pieni si confermano per inerzia. Non tocca il gate, che guarda solo il
+ * carrello: il modale si apre comunque e chiede conferma a ogni carrello nuovo.
+ */
+const DURATA_MEMORIA_LOCALE = 90 * 24 * 60 * 60 * 1000;
 
 /** Un professionista non ha una ragione sociale: l'etichetta segue il tipo di cliente. */
 const ETICHETTE_RAGIONE_SOCIALE = {
@@ -57,6 +57,8 @@ let modale;
 let form;
 let bottone;
 let apertoAutomaticamente = false;
+/** true appena il cliente tocca i radio: da li' in poi la sua scelta non si sovrascrive. */
+let tipoClienteToccato = false;
 /** 'checkout' se il modale nasce da un tentativo di check-out, 'auto' se dalla pagina carrello. */
 let motivoApertura = 'checkout';
 
@@ -85,6 +87,7 @@ export async function avvia() {
   form.addEventListener('submit', alSalvataggio);
   form.addEventListener('change', (evento) => {
     if (evento.target instanceof Element && evento.target.name === 'tipoCliente') {
+      tipoClienteToccato = true;
       aggiornaTipoCliente();
     }
   });
@@ -208,16 +211,15 @@ async function aggiornaStato() {
 }
 
 function datiDaAttributi(attributi = {}) {
-  const prendi = (chiave, chiaveLegacy) =>
-    String(attributi[chiave] ?? attributi[chiaveLegacy] ?? '').trim();
+  const prendi = (chiave) => String(attributi[chiave] ?? '').trim();
 
   return {
     tipoCliente: prendi(CHIAVI.tipoCliente),
-    ragioneSociale: prendi(CHIAVI.ragioneSociale, CHIAVI_LEGACY.ragioneSociale),
-    partitaIva: prendi(CHIAVI.partitaIva, CHIAVI_LEGACY.partitaIva),
+    ragioneSociale: prendi(CHIAVI.ragioneSociale),
+    partitaIva: prendi(CHIAVI.partitaIva),
     codiceFiscale: prendi(CHIAVI.codiceFiscale),
-    codiceSdi: prendi(CHIAVI.codiceSdi, CHIAVI_LEGACY.codiceSdi),
-    pec: prendi(CHIAVI.pec, CHIAVI_LEGACY.pec),
+    codiceSdi: prendi(CHIAVI.codiceSdi),
+    pec: prendi(CHIAVI.pec),
   };
 }
 
@@ -291,13 +293,6 @@ function apriModale(motivo = 'checkout') {
   pulisciErrori();
   if (!modale.open) modale.showModal();
 
-  // Senza tipo di cliente il resto del modulo non ha ancora una forma definita:
-  // il focus va sulla prima cosa da decidere.
-  if (!tipoClienteSelezionato()) {
-    primoRadioTipoCliente()?.focus();
-    return;
-  }
-
   const primoVuoto = CAMPI.map(campoInput).find((input) => input && !input.value && visibile(input));
   (primoVuoto || campoInput('ragioneSociale')).focus();
 }
@@ -344,7 +339,10 @@ function precompila() {
     input.value = daCarrello[nome] || salvati[nome] || '';
   }
 
-  if (!tipoClienteSelezionato()) {
+  // "Societa'" e' preselezionato nel markup, quindi qui non basta guardare se c'e'
+  // gia' una scelta: un tipo salvato deve poter vincere sul default, ma non su una
+  // scelta appena fatta dal cliente.
+  if (!tipoClienteToccato) {
     impostaTipoCliente(daCarrello.tipoCliente || salvati.tipoCliente || '');
   }
   aggiornaTipoCliente();
@@ -352,7 +350,14 @@ function precompila() {
 
 function leggiDaLocalStorage() {
   try {
-    return JSON.parse(window.localStorage.getItem(CHIAVE_LOCALE)) || {};
+    const salvato = JSON.parse(window.localStorage.getItem(CHIAVE_LOCALE));
+    // Senza data e' il formato precedente: si scarta invece di indovinarne l'eta'.
+    if (!salvato || typeof salvato.salvatoIl !== 'number') return {};
+    if (Date.now() - salvato.salvatoIl > DURATA_MEMORIA_LOCALE) {
+      window.localStorage.removeItem(CHIAVE_LOCALE);
+      return {};
+    }
+    return salvato.valori || {};
   } catch {
     return {};
   }
@@ -360,7 +365,7 @@ function leggiDaLocalStorage() {
 
 function scriviInLocalStorage(valori) {
   try {
-    window.localStorage.setItem(CHIAVE_LOCALE, JSON.stringify(valori));
+    window.localStorage.setItem(CHIAVE_LOCALE, JSON.stringify({ salvatoIl: Date.now(), valori }));
   } catch {
     /* modalita' privata o storage pieno: non e' un problema */
   }

@@ -91,7 +91,9 @@ nessun cliente vede.
    (tipicamente regole che nascondevano campi del suo modale, che ora puntano a elementi
    inesistenti).
 7. Non toccare gli ordini storici: gli attributi `getfiscal_*` già acquisiti restano dove
-   sono.
+   sono. L'app però **non li legge**: i carrelli ancora aperti al cutover con dati della
+   vecchia app ripartono dal modale vuoto. È voluto — quei valori non sono mai passati da
+   una validazione, e in un carrello reale ci abbiamo trovato `getfiscal_vat: aaaaa`.
 
 Il rollback dell'estensione è indipendente da quello del tema, e altrettanto rapido:
 

@@ -202,10 +202,21 @@
 
 /* ---------------------------------------------------------------- recapito */
 
+/* Una riga sola, dello stesso peso di quelle che affiancano "oppure": separa gli
+   identificativi del cliente dal recapito, che sono due domande diverse.
+   E' un <hr> e non il border-top del fieldset perche' la <legend> buca il bordo del
+   fieldset per rendering nativo: la linea partirebbe dopo il testo invece di stargli
+   sopra. */
+.df-separatore {
+  border: 0;
+  border-top: 1px solid var(--df-bordo);
+  margin: 0.875rem 0 1rem;
+}
+
 .df-recapito {
   border: 0;
   padding: 0;
-  margin: 1rem 0 0.875rem;
+  margin: 0 0 0.875rem;
 }
 
 .df-recapito legend {
