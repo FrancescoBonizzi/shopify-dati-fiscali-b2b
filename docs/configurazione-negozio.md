@@ -56,6 +56,9 @@ che non passa dal tema.
 - Verificare i campi fiscali italiani nativi di Shopify (Codice fiscale e PEC, visibili al
   check-out quando le imposte UE sono configurate) e l'eventuale CSS che oggi li nasconde:
   vanno gestiti in modo coerente con il modale, per non chiedere due volte le stesse cose.
+  Da quando il modale chiede il codice fiscale alle ditte individuali la sovrapposizione è
+  reale, non teorica: se il campo nativo resta visibile, la stessa persona se lo vede
+  chiedere due volte a due passi di distanza. La scelta va fatta, in un senso o nell'altro.
 
 ## 5. Attivazione dell'app
 

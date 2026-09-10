@@ -3,8 +3,8 @@
 # Dati Fiscali B2B — app Shopify
 
 Rende obbligatori i dati per la fattura elettronica prima del check-out di un negozio
-Shopify che vende solo B2B: **ragione sociale**, **partita IVA** e **codice destinatario
-SDI oppure PEC**.
+Shopify che vende solo B2B: **ragione sociale**, **partita IVA**, **codice destinatario
+SDI oppure PEC** e, per le ditte individuali, il **codice fiscale del titolare**.
 
 Nasce per sostituire le app esistenti su un punto preciso: **la validazione della partita
 IVA**. Un campo che accetta `aaaa` o un codice fiscale a 16 caratteri produce una fattura
@@ -18,6 +18,14 @@ elettronica che viene scartata, e il costo lo paghi in tempo di amministrazione.
   attributes**, visibili poi nei *Dettagli aggiuntivi* dell'ordine.
 - Validazione vera della partita IVA: 11 cifre, codice ufficio provinciale esistente,
   cifra di controllo secondo la variante italiana dell'algoritmo di Luhn.
+- Scelta esplicita del tipo di cliente, perché dai dati non è deducibile. Le società hanno
+  il codice fiscale uguale alla partita IVA; le persone fisiche con partita IVA (ditte
+  individuali e liberi professionisti) ne hanno uno diverso, a 16 caratteri, e **senza
+  quello il Sistema di Interscambio scarta la fattura**. Per loro il campo compare ed è
+  obbligatorio, e la partita IVA ricopiata al suo posto viene riconosciuta e rifiutata.
+  Il controllo è volutamente leggero — 16 caratteri alfanumerici più il carattere di
+  controllo — perché i vincoli sulla struttura interna (mese, comune, omocodia) rischiano
+  di rifiutare codici veri in cambio di poco.
 - Regola SDI/PEC della fatturazione elettronica, incluso `0000000` — formalmente valido,
   ma rende la PEC obbligatoria.
 - Blocco di tutti i punti di uscita verso il check-out finché i dati non sono validi.
@@ -91,9 +99,10 @@ statica, senza script né richieste esterne, pubblicata da GitHub Pages.
 
 | Chiave | Contenuto |
 |---|---|
-| `tipo_cliente` | sempre `azienda` |
+| `tipo_cliente` | `azienda` oppure `ditta_individuale` |
 | `ragione_sociale` | normalizzata |
 | `partita_iva` | 11 cifre, senza prefisso `IT`, spazi o punti |
+| `codice_fiscale` | 16 caratteri maiuscoli; **vuoto** per le società, dove coincide con la partita IVA |
 | `codice_sdi` | maiuscolo, 7 caratteri (6 se attivata la modalità PA) |
 | `pec` | minuscolo |
 | `dati_fiscali_validati` | `1`, scritto **solo** dopo che il validatore è passato |
@@ -102,6 +111,10 @@ statica, senza script né richieste esterne, pubblicata da GitHub Pages.
 Il modale precompila anche dalle vecchie chiavi `getfiscal_*`, così i carrelli già aperti
 al momento della migrazione da [GetFiscal](https://apps.shopify.com/getfiscal) non
 ripartono da zero.
+
+`azienda` è anche il valore che la versione 1.0.0 scriveva per tutti: tenerlo come valore
+delle società significa che i carrelli già compilati restano validi quando esce una
+versione nuova, e a nessuno si riapre il modale con la spesa già fatta.
 
 ## Sviluppo
 
@@ -167,6 +180,10 @@ I selettori dei bottoni di check-out cambiano da tema a tema: vanno verificati s
 2. Check-out dal cart drawer → si apre il modale.
 3. P.IVA `aaaa`, poi `RSSMRA80A01H501U`, poi `1234567001` → errore inline, nessun redirect.
 4. `12345670017` e `IT 12345670017` → passano.
+4b. Tipo cliente *Ditta individuale*: compare il codice fiscale, l'etichetta del primo campo
+   diventa *Nome e cognome o ditta*. Salvare senza codice fiscale → errore; con la partita
+   IVA ricopiata → errore specifico; con `RSSMRA80A01H501U` → passa. Tornare su *Società*
+   → il campo sparisce e l'ordine arriva con `codice_fiscale` vuoto.
 5. SDI `0000000` senza PEC → errore; con PEC → passa.
 6. Rete staccata al salvataggio → messaggio nel modale, nessun redirect.
 7. Riaprire il modale → campi precompilati.

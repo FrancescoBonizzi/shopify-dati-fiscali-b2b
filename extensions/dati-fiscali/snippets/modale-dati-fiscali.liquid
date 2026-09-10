@@ -25,8 +25,32 @@
     {%- endif -%}
 
     <form id="df-form" class="df-form" novalidate>
+      {%- comment -%}
+        Il tipo di cliente viene per primo perché governa i campi sotto: le società
+        hanno il codice fiscale uguale alla partita IVA, le persone fisiche no.
+        Nessuna opzione preselezionata di proposito: un default "Società" verrebbe
+        accettato per inerzia proprio da chi stiamo cercando di intercettare.
+      {%- endcomment -%}
+      <fieldset class="df-tipo" aria-describedby="df-errore-tipoCliente">
+        <legend>Tipo di cliente</legend>
+
+        <div class="df-scelte">
+          <label class="df-scelta">
+            <input type="radio" name="tipoCliente" value="azienda">
+            <span>Società</span>
+          </label>
+
+          <label class="df-scelta">
+            <input type="radio" name="tipoCliente" value="ditta_individuale">
+            <span>Ditta individuale o professionista</span>
+          </label>
+        </div>
+
+        <p class="df-errore" id="df-errore-tipoCliente" role="alert"></p>
+      </fieldset>
+
       <div class="df-campo">
-        <label for="df-ragione-sociale">Ragione sociale</label>
+        <label for="df-ragione-sociale" id="df-etichetta-ragione-sociale">Ragione sociale</label>
         <input
           type="text"
           id="df-ragione-sociale"
@@ -51,6 +75,26 @@
           aria-describedby="df-errore-partitaIva"
         >
         <p class="df-errore" id="df-errore-partitaIva" role="alert"></p>
+      </div>
+
+      {%- comment -%}
+        Mostrato solo alle persone fisiche: per le società il codice fiscale coincide
+        con la partita IVA e chiederlo due volte confonde e basta.
+      {%- endcomment -%}
+      <div class="df-campo" id="df-campo-codice-fiscale" hidden>
+        <label for="df-codice-fiscale">Codice fiscale del titolare</label>
+        <input
+          type="text"
+          id="df-codice-fiscale"
+          name="codiceFiscale"
+          maxlength="16"
+          placeholder="16 caratteri"
+          autocapitalize="characters"
+          autocomplete="off"
+          spellcheck="false"
+          aria-describedby="df-errore-codiceFiscale"
+        >
+        <p class="df-errore" id="df-errore-codiceFiscale" role="alert"></p>
       </div>
 
       <fieldset class="df-recapito" aria-describedby="df-errore-recapito">

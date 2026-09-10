@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   partitaIvaValida,
   normalizzaPartitaIva,
+  codiceFiscaleValido,
   codiceSdiValido,
   sdiAssente,
   pecValida,
@@ -50,6 +51,37 @@ test('partita IVA: uffici provinciali speciali', () => {
   assert.equal(partitaIvaValida(inesistente + cifraDiControllo(inesistente)), false);
 });
 
+test('codice fiscale: casi validi', () => {
+  const validi = {
+    'RSSMRA80A01H501U': 'carattere di controllo calcolato a mano',
+    'MRTMTT25D09F205Z': 'esempio pubblico di riferimento',
+    'RSSMRA80A01H50MM': 'omocodia: una cifra sostituita da lettera',
+    'rssmra80a01h501u': 'minuscolo',
+    ' RSS MRA 80A01H501U ': 'spazi',
+    'RSS-MRA.80A01H501U': 'punti e trattini',
+  };
+  for (const [input, motivo] of Object.entries(validi)) {
+    assert.equal(codiceFiscaleValido(input), true, `"${input}" doveva essere accettato (${motivo})`);
+  }
+});
+
+test('codice fiscale: casi non validi', () => {
+  const nonValidi = {
+    'RSSMRA80A01H501A': 'carattere di controllo sbagliato',
+    'RSSMRA80A01H501': '15 caratteri',
+    'RSSMRA80A01H501UU': '17 caratteri',
+    'RSSMRA80A01H501@': 'carattere non alfanumerico',
+    '12345670017': 'partita IVA al posto del codice fiscale',
+    'AAAAAAAAAAAAAAAA': 'sedici lettere uguali',
+    '': 'vuoto',
+  };
+  for (const [input, motivo] of Object.entries(nonValidi)) {
+    assert.equal(codiceFiscaleValido(input), false, `"${input}" doveva essere rifiutato (${motivo})`);
+  }
+  assert.equal(codiceFiscaleValido(null), false);
+  assert.equal(codiceFiscaleValido(undefined), false);
+});
+
 test('codice SDI', () => {
   assert.equal(codiceSdiValido('ABC1234'), true);
   assert.equal(codiceSdiValido('abc1234'), true, 'il case non conta');
@@ -74,7 +106,7 @@ test('PEC', () => {
 });
 
 test('validaDatiFiscali: combinazioni SDI / PEC', () => {
-  const base = { ragioneSociale: 'Acme Srl', partitaIva: '12345670017' };
+  const base = { tipoCliente: 'azienda', ragioneSociale: 'Acme Srl', partitaIva: '12345670017' };
 
   assert.equal(validaDatiFiscali({ ...base, codiceSdi: 'ABC1234', pec: '' }).ok, true);
   assert.equal(validaDatiFiscali({ ...base, codiceSdi: '', pec: 'a@pec.it' }).ok, true);
@@ -97,14 +129,16 @@ test('validaDatiFiscali: combinazioni SDI / PEC', () => {
   assert.ok(nessunRecapito.errori.recapito);
 });
 
-test('validaDatiFiscali: ragione sociale e partita IVA obbligatorie', () => {
+test('validaDatiFiscali: tipo cliente, ragione sociale e partita IVA obbligatorie', () => {
   const senzaNulla = validaDatiFiscali({});
   assert.equal(senzaNulla.ok, false);
+  assert.ok(senzaNulla.errori.tipoCliente);
   assert.ok(senzaNulla.errori.ragioneSociale);
   assert.ok(senzaNulla.errori.partitaIva);
   assert.ok(senzaNulla.errori.recapito);
 
   const cf = validaDatiFiscali({
+    tipoCliente: 'azienda',
     ragioneSociale: 'Rossi Mario',
     partitaIva: 'RSSMRA80A01H501U',
     codiceSdi: 'ABC1234',
@@ -113,17 +147,60 @@ test('validaDatiFiscali: ragione sociale e partita IVA obbligatorie', () => {
   assert.match(cf.errori.partitaIva, /codice fiscale/i);
 });
 
+test('validaDatiFiscali: il codice fiscale segue il tipo di cliente', () => {
+  const base = { ragioneSociale: 'Rossi Mario', partitaIva: '12345670017', codiceSdi: 'ABC1234' };
+
+  // Societa': il campo non esiste, e un valore residuo non deve finire nel carrello.
+  const societa = validaDatiFiscali({ ...base, tipoCliente: 'azienda', codiceFiscale: 'RSSMRA80A01H501U' });
+  assert.equal(societa.ok, true);
+  assert.equal(societa.valori.codiceFiscale, '');
+
+  const dittaCompleta = validaDatiFiscali({
+    ...base,
+    tipoCliente: 'ditta_individuale',
+    codiceFiscale: 'RSSMRA80A01H501U',
+  });
+  assert.equal(dittaCompleta.ok, true);
+
+  const senzaCf = validaDatiFiscali({ ...base, tipoCliente: 'ditta_individuale', codiceFiscale: '' });
+  assert.equal(senzaCf.ok, false);
+  assert.ok(senzaCf.errori.codiceFiscale);
+
+  // Il caso che ha motivato tutto: la partita IVA copiata nel campo del codice fiscale,
+  // in qualunque forma sia stata scritta.
+  for (const copiata of ['12345670017', 'IT 12345670017', '123.456.700.17']) {
+    const esito = validaDatiFiscali({ ...base, tipoCliente: 'ditta_individuale', codiceFiscale: copiata });
+    assert.equal(esito.ok, false);
+    assert.match(esito.errori.codiceFiscale, /non può coincidere/i, `"${copiata}"`);
+  }
+
+  const cfRotto = validaDatiFiscali({
+    ...base,
+    tipoCliente: 'ditta_individuale',
+    codiceFiscale: 'RSSMRA80A01H501A',
+  });
+  assert.equal(cfRotto.ok, false);
+  assert.match(cfRotto.errori.codiceFiscale, /non valido/i);
+
+  // Un tipo di cliente sconosciuto vale come nessuna scelta.
+  assert.ok(validaDatiFiscali({ ...base, tipoCliente: 'pinco' }).errori.tipoCliente);
+});
+
 test('validaDatiFiscali: restituisce i valori normalizzati', () => {
   const { ok, valori } = validaDatiFiscali({
-    ragioneSociale: '  Acme   Srl  ',
+    tipoCliente: 'ditta_individuale',
+    ragioneSociale: '  Mario   Rossi  ',
     partitaIva: 'IT 12345670017',
+    codiceFiscale: ' rss-mra.80a01h501u ',
     codiceSdi: ' abc1234 ',
     pec: ' Acme@PEC.it ',
   });
   assert.equal(ok, true);
   assert.deepEqual(valori, {
-    ragioneSociale: 'Acme Srl',
+    tipoCliente: 'ditta_individuale',
+    ragioneSociale: 'Mario Rossi',
     partitaIva: '12345670017',
+    codiceFiscale: 'RSSMRA80A01H501U',
     codiceSdi: 'ABC1234',
     pec: 'acme@pec.it',
   });

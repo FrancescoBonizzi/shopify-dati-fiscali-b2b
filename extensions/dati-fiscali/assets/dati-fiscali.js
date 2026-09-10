@@ -9,6 +9,7 @@ const CHIAVI = {
   tipoCliente: 'tipo_cliente',
   ragioneSociale: 'ragione_sociale',
   partitaIva: 'partita_iva',
+  codiceFiscale: 'codice_fiscale',
   codiceSdi: 'codice_sdi',
   pec: 'pec',
   validati: 'dati_fiscali_validati',
@@ -23,8 +24,21 @@ const CHIAVI_LEGACY = {
   pec: 'getfiscal_pec',
 };
 
-const CAMPI = ['ragioneSociale', 'partitaIva', 'codiceSdi', 'pec'];
+/**
+ * Solo i campi testuali. Il gruppo radio del tipo cliente sta fuori di proposito:
+ * form.elements.namedItem() restituisce una RadioNodeList, che non ha setAttribute
+ * né focus, e passarla dove passano gli input romperebbe la gestione degli errori.
+ */
+const CAMPI = ['ragioneSociale', 'partitaIva', 'codiceFiscale', 'codiceSdi', 'pec'];
 const CHIAVE_LOCALE = 'dati-fiscali-b2b';
+
+const TIPO_DITTA_INDIVIDUALE = 'ditta_individuale';
+
+/** Un professionista non ha una ragione sociale: l'etichetta segue il tipo di cliente. */
+const ETICHETTE_RAGIONE_SOCIALE = {
+  azienda: 'Ragione sociale',
+  ditta_individuale: 'Nome e cognome o ditta',
+};
 
 const SELETTORI_CHECKOUT = [
   '[name="checkout"]',
@@ -69,6 +83,11 @@ export async function avvia() {
   osservaMutazioniCarrello();
 
   form.addEventListener('submit', alSalvataggio);
+  form.addEventListener('change', (evento) => {
+    if (evento.target instanceof Element && evento.target.name === 'tipoCliente') {
+      aggiornaTipoCliente();
+    }
+  });
   modale.addEventListener('close', () => {
     if (modale.returnValue === 'annulla') log('modale chiuso senza salvare');
   });
@@ -193,8 +212,10 @@ function datiDaAttributi(attributi = {}) {
     String(attributi[chiave] ?? attributi[chiaveLegacy] ?? '').trim();
 
   return {
+    tipoCliente: prendi(CHIAVI.tipoCliente),
     ragioneSociale: prendi(CHIAVI.ragioneSociale, CHIAVI_LEGACY.ragioneSociale),
     partitaIva: prendi(CHIAVI.partitaIva, CHIAVI_LEGACY.partitaIva),
+    codiceFiscale: prendi(CHIAVI.codiceFiscale),
     codiceSdi: prendi(CHIAVI.codiceSdi, CHIAVI_LEGACY.codiceSdi),
     pec: prendi(CHIAVI.pec, CHIAVI_LEGACY.pec),
   };
@@ -269,12 +290,48 @@ function apriModale(motivo = 'checkout') {
   precompila();
   pulisciErrori();
   if (!modale.open) modale.showModal();
-  const primoVuoto = CAMPI.map(campoInput).find((input) => input && !input.value);
+
+  // Senza tipo di cliente il resto del modulo non ha ancora una forma definita:
+  // il focus va sulla prima cosa da decidere.
+  if (!tipoClienteSelezionato()) {
+    primoRadioTipoCliente()?.focus();
+    return;
+  }
+
+  const primoVuoto = CAMPI.map(campoInput).find((input) => input && !input.value && visibile(input));
   (primoVuoto || campoInput('ragioneSociale')).focus();
 }
 
 function campoInput(nome) {
   return form.elements.namedItem(nome);
+}
+
+/** Il campo del codice fiscale è nascosto alle società: non deve mai prendere il focus. */
+function visibile(input) {
+  return !input.closest('[hidden]');
+}
+
+function primoRadioTipoCliente() {
+  return form.querySelector('input[name="tipoCliente"]');
+}
+
+function tipoClienteSelezionato() {
+  // .value su una RadioNodeList restituisce il valore selezionato, o '' se nessuno lo è.
+  return form.elements.tipoCliente?.value || '';
+}
+
+function impostaTipoCliente(valore) {
+  if (form.elements.tipoCliente && valore) form.elements.tipoCliente.value = valore;
+}
+
+/** Adegua al tipo di cliente i campi che cambiano: codice fiscale ed etichetta del nome. */
+function aggiornaTipoCliente() {
+  const tipo = tipoClienteSelezionato();
+  const contenitore = document.getElementById('df-campo-codice-fiscale');
+  if (contenitore) contenitore.hidden = tipo !== TIPO_DITTA_INDIVIDUALE;
+
+  const etichetta = document.getElementById('df-etichetta-ragione-sociale');
+  if (etichetta && tipo) etichetta.textContent = ETICHETTE_RAGIONE_SOCIALE[tipo];
 }
 
 function precompila() {
@@ -286,6 +343,11 @@ function precompila() {
     if (!input || input.value) continue;
     input.value = daCarrello[nome] || salvati[nome] || '';
   }
+
+  if (!tipoClienteSelezionato()) {
+    impostaTipoCliente(daCarrello.tipoCliente || salvati.tipoCliente || '');
+  }
+  aggiornaTipoCliente();
 }
 
 function leggiDaLocalStorage() {
@@ -310,6 +372,14 @@ function pulisciErrori() {
   });
   document.getElementById('df-errore-generale').textContent = '';
   CAMPI.forEach((nome) => campoInput(nome)?.removeAttribute('aria-invalid'));
+  primoRadioTipoCliente()?.removeAttribute('aria-invalid');
+}
+
+/** Il bersaglio di aria-invalid e del focus per un errore: input, o primo radio. */
+function bersaglioErrore(campo) {
+  if (campo === 'tipoCliente') return primoRadioTipoCliente();
+  const input = campoInput(campo);
+  return input instanceof HTMLElement ? input : null;
 }
 
 function mostraErrori(errori) {
@@ -317,10 +387,10 @@ function mostraErrori(errori) {
   for (const [campo, messaggio] of Object.entries(errori)) {
     const nodo = document.getElementById(`df-errore-${campo}`);
     if (nodo) nodo.textContent = messaggio;
-    campoInput(campo)?.setAttribute('aria-invalid', 'true');
+    bersaglioErrore(campo)?.setAttribute('aria-invalid', 'true');
   }
-  const primo = Object.keys(errori).find((campo) => campoInput(campo));
-  if (primo) campoInput(primo).focus();
+  const primo = Object.keys(errori).find((campo) => bersaglioErrore(campo));
+  if (primo) bersaglioErrore(primo).focus();
 }
 
 function erroreGenerale(messaggio) {
@@ -333,6 +403,7 @@ async function alSalvataggio(evento) {
   evento.preventDefault();
 
   const inseriti = Object.fromEntries(CAMPI.map((nome) => [nome, campoInput(nome).value]));
+  inseriti.tipoCliente = tipoClienteSelezionato();
   const esito = validatori.validaDatiFiscali(inseriti, { ammettiPa: !!config.ammettiPa });
 
   if (!esito.ok) {
@@ -371,9 +442,11 @@ async function salvaNelCarrello(valori) {
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({
       attributes: {
-        [CHIAVI.tipoCliente]: 'azienda',
+        [CHIAVI.tipoCliente]: valori.tipoCliente,
         [CHIAVI.ragioneSociale]: valori.ragioneSociale,
         [CHIAVI.partitaIva]: valori.partitaIva,
+        // Vuoto per le società: cancella un valore rimasto da un tentativo precedente.
+        [CHIAVI.codiceFiscale]: valori.codiceFiscale,
         [CHIAVI.codiceSdi]: valori.codiceSdi,
         [CHIAVI.pec]: valori.pec,
         // Scritto solo dopo che il validatore e' passato: e' il flag che permette

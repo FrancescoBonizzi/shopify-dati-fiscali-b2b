@@ -6,7 +6,21 @@
  * Per questo non tocca il DOM e non ha dipendenze.
  */
 
-export const VERSIONE_VALIDATORE = '1.0.0';
+export const VERSIONE_VALIDATORE = '1.1.0';
+
+/**
+ * Tipo di cliente. Decide se il codice fiscale è obbligatorio: le società hanno
+ * un codice fiscale numerico che coincide con la partita IVA, le persone fisiche
+ * con partita IVA (ditte individuali e liberi professionisti) ne hanno uno diverso,
+ * a 16 caratteri, e senza quello il Sistema di Interscambio scarta la fattura.
+ *
+ * 'azienda' è anche il valore che la versione 1.0.0 scriveva per tutti: tenerlo
+ * significa che i carrelli già compilati restano validi.
+ */
+export const TIPI_CLIENTE = {
+  azienda: 'azienda',
+  dittaIndividuale: 'ditta_individuale',
+};
 
 /** Codici ufficio provinciale ammessi oltre all'intervallo 001-100. */
 const UFFICI_SPECIALI = [120, 121, 888, 999];
@@ -21,6 +35,11 @@ export function normalizzaPartitaIva(raw) {
   return testo(raw).replace(/[\s.\-_]/g, '').toUpperCase().replace(/^IT/, '');
 }
 
+/** Come la partita IVA, ma senza togliere IT: un codice fiscale può iniziare per IT. */
+export function normalizzaCodiceFiscale(raw) {
+  return testo(raw).replace(/[\s.\-_]/g, '').toUpperCase();
+}
+
 export function normalizzaCodiceSdi(raw) {
   return testo(raw).replace(/\s/g, '').toUpperCase();
 }
@@ -31,6 +50,12 @@ export function normalizzaPec(raw) {
 
 export function normalizzaRagioneSociale(raw) {
   return testo(raw).replace(/\s+/g, ' ');
+}
+
+/** Restituisce uno dei due tipi ammessi, oppure '' se non è stato scelto nulla. */
+export function normalizzaTipoCliente(raw) {
+  const s = testo(raw).toLowerCase();
+  return s === TIPI_CLIENTE.azienda || s === TIPI_CLIENTE.dittaIndividuale ? s : '';
 }
 
 /**
@@ -65,6 +90,56 @@ export function partitaIvaValida(raw) {
   return somma % 10 === 0;
 }
 
+/* ------------------------------------------------------------ codice fiscale */
+
+const ALFANUMERICI = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const LETTERE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+/**
+ * Valori dei caratteri in posizione dispari (1-based) per il carattere di controllo.
+ * Indicizzati come ALFANUMERICI: prima le dieci cifre, poi le ventisei lettere.
+ * In posizione pari il valore è semplicemente la posizione nell'alfabeto.
+ */
+const VALORI_DISPARI = [
+  1, 0, 5, 7, 9, 13, 15, 17, 19, 21,
+  1, 0, 5, 7, 9, 13, 15, 17, 19, 21, 2, 4, 18, 20, 11, 3, 6, 8, 12, 14, 16, 10, 22, 25, 24, 23,
+];
+
+/** In posizione pari il valore è la cifra stessa, o la posizione della lettera nell'alfabeto. */
+const valorePari = (posto) => (posto < 10 ? posto : posto - 10);
+
+/** Il sedicesimo carattere, calcolato dai primi quindici. */
+function carattereDiControllo(codice) {
+  let somma = 0;
+  for (let i = 0; i < 15; i += 1) {
+    const posto = ALFANUMERICI.indexOf(codice[i]);
+    // i indicizza da 0, la norma conta da 1: gli indici pari sono le posizioni dispari
+    somma += i % 2 === 0 ? VALORI_DISPARI[posto] : valorePari(posto);
+  }
+  return LETTERE[somma % 26];
+}
+
+/**
+ * Codice fiscale di persona fisica: 16 caratteri alfanumerici, carattere di controllo
+ * che torna. Nient'altro.
+ *
+ * Di proposito non controlliamo la struttura interna (lettera del mese, codice catastale
+ * del comune, posizioni dell'omocodia): è la parte che rifiuta codici veri quando una
+ * delle assunzioni è sbagliata, e aggiunge poco, perché il carattere di controllo scarta
+ * già i refusi e le stringhe inventate. Senza vincolo posizionale, per inciso, i codici
+ * con omocodia passano da soli.
+ *
+ * Il codice fiscale numerico a 11 cifre non è accettato: appartiene alle società, dove
+ * coincide con la partita IVA, e li' il campo va lasciato vuoto.
+ */
+export function codiceFiscaleValido(raw) {
+  const s = normalizzaCodiceFiscale(raw);
+  if (!/^[A-Z0-9]{16}$/.test(s)) return false;
+  return s[15] === carattereDiControllo(s);
+}
+
+/* ------------------------------------------------------------------ recapito */
+
 /**
  * Codice destinatario SDI.
  * 7 caratteri alfanumerici per i privati; 6 per la Pubblica Amministrazione
@@ -90,10 +165,18 @@ export function ragioneSocialeValida(raw) {
 }
 
 export const MESSAGGI = {
+  tipoClienteMancante:
+    'Indica se la fattura va intestata a una società o a una ditta individuale.',
   ragioneSocialeMancante: 'Inserisci la ragione sociale dell’azienda.',
   partitaIvaMancante: 'Inserisci la partita IVA dell’azienda.',
   partitaIvaNonValida:
-    'Partita IVA non valida: servono 11 cifre. Il codice fiscale a 16 caratteri non è accettato.',
+    'Partita IVA non valida: servono 11 cifre. Il codice fiscale a 16 caratteri va nel campo dedicato.',
+  codiceFiscaleMancante:
+    'Ditte individuali e liberi professionisti devono indicare anche il codice fiscale del titolare.',
+  codiceFiscaleUgualePartitaIva:
+    'Il codice fiscale non può coincidere con la partita IVA: serve quello a 16 caratteri del titolare.',
+  codiceFiscaleNonValido:
+    'Codice fiscale non valido: servono 16 caratteri e il carattere di controllo finale non torna.',
   recapitoMancante:
     'Serve un recapito per la fattura elettronica: inserisci il codice SDI oppure la PEC.',
   codiceSdiNonValido: 'Il codice destinatario SDI deve avere 7 caratteri alfanumerici.',
@@ -101,7 +184,7 @@ export const MESSAGGI = {
     'Il codice destinatario deve avere 7 caratteri (6 per la Pubblica Amministrazione).',
   pecNonValida: 'Indirizzo PEC non valido.',
   sdiZeriSenzaPec:
-    'Con codice SDI 0000000 la PEC è obbligatoria: è l’unico recapito rimasto per la fattura.',
+    'Con codice SDI 0000000 la PEC è obbligatoria: è l’unico recapito rimasto per la fattura.',
 };
 
 /**
@@ -110,14 +193,25 @@ export const MESSAGGI = {
  *          `valori` contiene i dati normalizzati, pronti per il carrello.
  */
 export function validaDatiFiscali(dati = {}, { ammettiPa = false } = {}) {
+  const tipoCliente = normalizzaTipoCliente(dati.tipoCliente);
+  const personaFisica = tipoCliente === TIPI_CLIENTE.dittaIndividuale;
+
   const valori = {
+    tipoCliente,
     ragioneSociale: normalizzaRagioneSociale(dati.ragioneSociale),
     partitaIva: normalizzaPartitaIva(dati.partitaIva),
+    // Una società non deve portarsi nel carrello un codice fiscale digitato
+    // prima di cambiare idea sul tipo di cliente.
+    codiceFiscale: personaFisica ? normalizzaCodiceFiscale(dati.codiceFiscale) : '',
     codiceSdi: normalizzaCodiceSdi(dati.codiceSdi),
     pec: normalizzaPec(dati.pec),
   };
 
   const errori = {};
+
+  if (!valori.tipoCliente) {
+    errori.tipoCliente = MESSAGGI.tipoClienteMancante;
+  }
 
   if (!valori.ragioneSociale) {
     errori.ragioneSociale = MESSAGGI.ragioneSocialeMancante;
@@ -129,6 +223,20 @@ export function validaDatiFiscali(dati = {}, { ammettiPa = false } = {}) {
     errori.partitaIva = MESSAGGI.partitaIvaMancante;
   } else if (!partitaIvaValida(valori.partitaIva)) {
     errori.partitaIva = MESSAGGI.partitaIvaNonValida;
+  }
+
+  // Codice fiscale: solo per le persone fisiche, e in quest'ordine, perche' chi
+  // copia la partita IVA deve leggere il motivo vero invece di "non valido".
+  if (personaFisica) {
+    if (!valori.codiceFiscale) {
+      errori.codiceFiscale = MESSAGGI.codiceFiscaleMancante;
+      // Confrontata con la normalizzazione della partita IVA, cosi' "IT12345670017"
+      // e "123.456.700.17" vengono riconosciuti per quello che sono.
+    } else if (valori.partitaIva && normalizzaPartitaIva(valori.codiceFiscale) === valori.partitaIva) {
+      errori.codiceFiscale = MESSAGGI.codiceFiscaleUgualePartitaIva;
+    } else if (!codiceFiscaleValido(valori.codiceFiscale)) {
+      errori.codiceFiscale = MESSAGGI.codiceFiscaleNonValido;
+    }
   }
 
   // Recapito per la fattura elettronica: SDI utile OPPURE PEC valida.
