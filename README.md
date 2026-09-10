@@ -40,6 +40,15 @@ elettronica che viene scartata, e il costo lo paghi in tempo di amministrazione.
   riparte da vuoti. È solo una comodità per chi riordina: il gate guarda gli attributi
   del carrello, non questa memoria, quindi a ogni carrello nuovo il modale si apre e
   chiede conferma comunque.
+- **Scudo di partenza** contro la finestra scoperta all'avvio: il modulo del gate è
+  differito, quindi fra il momento in cui il bottone di check-out diventa cliccabile e
+  quello in cui il gate esiste passano da poche decine di millisecondi a interi secondi su
+  rete lenta, e un clic in quella finestra arriva al check-out senza dati. Un piccolo
+  script **classico e inline** nel blocco trattiene i clic e li consegna al gate appena è
+  pronto. Se il modulo non arriva entro dieci secondi lo scudo si toglie di mezzo e manda
+  al check-out chi aveva chiesto di pagare: un negozio che non incassa è un danno peggiore
+  di una fattura senza codice SDI. Per la stessa ragione, se `validatori.js` non si carica
+  il gate lascia passare invece di lasciare il bottone inerte.
 - Colori copiati automaticamente dal tema: primario dal bottone di check-out (con override
   manuale nelle impostazioni dell'app embed block), testo e sfondo dal body. I grigi di
   pannelli, bordi ed etichette sono derivati da questi ultimi con `color-mix`, così su un
@@ -191,6 +200,11 @@ I selettori dei bottoni di check-out cambiano da tema a tema: vanno verificati s
 7. Riaprire il modale → campi precompilati.
 8. Ordine di prova completato → dati nei *Dettagli aggiuntivi* dell'ordine.
 9. Tastiera (Tab, Esc) e mobile.
+10. **Clic precoce**: con la rete strozzata nei DevTools, aprire il carrello e cliccare
+    subito "Vai al pagamento", prima che la pagina abbia finito di caricare. Il clic deve
+    restare in sospeso e sfociare nel modale, non nel check-out.
+11. **Modulo bloccato**: bloccare `validatori.js` nei DevTools e cliccare il check-out. Si
+    deve arrivare al check-out lo stesso: il gate non deve mai lasciare un bottone inerte.
 
 ## Contributi
 

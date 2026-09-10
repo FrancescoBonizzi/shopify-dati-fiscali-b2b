@@ -40,6 +40,7 @@ const ETICHETTE_RAGIONE_SOCIALE = {
   ditta_individuale: 'Nome e cognome o ditta',
 };
 
+/** Ripiego se la config non porta la lista: un tema installato prima di questa versione. */
 const SELETTORI_CHECKOUT = [
   '[name="checkout"]',
   'a[href$="/checkout"]',
@@ -70,12 +71,19 @@ export async function avvia() {
 
   if (!modale || !form) {
     console.warn('[dati-fiscali] markup del modale non trovato');
+    // Senza modale non c'e' nulla da chiedere: lo scudo va tolto o il negozio
+    // resta con i bottoni di check-out inerti per dieci secondi.
+    rilasciaScudo();
     return;
   }
 
   // I listener vanno registrati subito: un click puo' arrivare prima che il
   // carrello sia stato letto. In quel caso intercettiamo e decidiamo dopo.
   registraGate();
+  // Da qui comanda il gate vero, e lo scudo inline puo' farsi da parte. Se ha
+  // trattenuto un clic mentre questo file era ancora in volo, lo riprendiamo
+  // appena sappiamo se i dati del carrello vanno bene.
+  const clicTrattenuto = rilasciaScudo();
   applicaColori();
 
   if (config.nascondiPagamentiRapidi) {
@@ -95,10 +103,26 @@ export async function avvia() {
     if (modale.returnValue === 'annulla') log('modale chiuso senza salvare');
   });
 
-  validatori = await import(config.urlValidatori);
-  await aggiornaStato();
+  try {
+    validatori = await import(config.urlValidatori);
+    await aggiornaStato();
+  } catch (errore) {
+    // Stessa politica del carrello non leggibile: il gate e' UX, non sicurezza.
+    // Senza validatori non possiamo giudicare i dati, e tenere chiuso il
+    // check-out farebbe perdere l'ordine invece di salvarne la fattura.
+    console.warn('[dati-fiscali] validatori non caricati: il check-out resta aperto', errore);
+    stato = { ok: true, dati: {}, datiOk: true };
+    document.documentElement.dataset.dfStato = 'completi';
+    document.documentElement.dataset.dfDati = 'validi';
+    if (clicTrattenuto) vaiAlCheckout();
+    return;
+  }
 
-  if (config.apriSuCarrello && sullaPaginaCarrello() && !apertoAutomaticamente && stato && !stato.ok) {
+  if (clicTrattenuto) {
+    // Il cliente aveva gia' chiesto di pagare: si riprende da li'.
+    apertoAutomaticamente = true;
+    tentativoCheckout();
+  } else if (config.apriSuCarrello && sullaPaginaCarrello() && !apertoAutomaticamente && stato && !stato.ok) {
     apertoAutomaticamente = true;
     apriModale('auto');
   }
@@ -106,6 +130,20 @@ export async function avvia() {
   window.addEventListener('pageshow', (e) => {
     if (e.persisted) aggiornaStato();
   });
+}
+
+/**
+ * Lo scudo inline del blocco trattiene i clic sul check-out finche' questo file
+ * non e' stato eseguito. Restituisce true se ne aveva trattenuto uno.
+ */
+function rilasciaScudo() {
+  const scudo = window.__datiFiscaliScudo;
+  if (!scudo || typeof scudo.rilascia !== 'function') return false;
+  try {
+    return scudo.rilascia() === true;
+  } catch (errore) {
+    return false;
+  }
 }
 
 /* ------------------------------------------------- mutazioni del carrello */
@@ -226,7 +264,8 @@ function datiDaAttributi(attributi = {}) {
 /* ---------------------------------------------------------------------- gate */
 
 function registraGate() {
-  const selettori = [SELETTORI_CHECKOUT, config.selettoriExtra].filter(Boolean).join(', ');
+  const base = config.selettoriCheckout || SELETTORI_CHECKOUT;
+  const selettori = [base, config.selettoriExtra].filter(Boolean).join(', ');
 
   document.addEventListener(
     'click',
@@ -266,12 +305,23 @@ function ferma(evento) {
 async function tentativoCheckout() {
   if (!stato || !validatori) {
     // Corsa fra il click e la lettura del carrello: risolviamo e proseguiamo.
-    if (!validatori) validatori = await import(config.urlValidatori);
-    await aggiornaStato();
-    if (stato.ok) {
+    try {
+      if (!validatori) validatori = await import(config.urlValidatori);
+      await aggiornaStato();
+    } catch (errore) {
+      // Il cliente ha chiesto di pagare e noi non sappiamo rispondere: lasciarlo
+      // su un bottone che non reagisce e' il peggiore degli esiti possibili.
+      console.warn('[dati-fiscali] validatori non caricati: check-out lasciato passare', errore);
       vaiAlCheckout();
       return;
     }
+  }
+
+  // Il gate chiama qui solo quando lo stato e' negativo, ma la ripresa di un clic
+  // trattenuto dallo scudo arriva anche a dati validi: decide questo controllo.
+  if (stato && stato.ok) {
+    vaiAlCheckout();
+    return;
   }
   apriModale();
 }

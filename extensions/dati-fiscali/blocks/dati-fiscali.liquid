@@ -7,9 +7,17 @@
 
 {{ 'dati-fiscali.css' | asset_url | stylesheet_tag }}
 
+{%- comment -%}
+  I selettori delle uscite verso il check-out stanno qui e non nel JavaScript
+  perche' li leggono in due: lo scudo di partenza qui sotto e il gate vero in
+  dati-fiscali.js. Una lista sola, cosi' non possono divergere.
+{%- endcomment -%}
+{%- assign selettori_checkout = '[name="checkout"], a[href$="/checkout"], a[href*="/checkout?"], a[href*="/cart/checkout"], [data-checkout-trigger], #checkout' -%}
+
 <script id="dati-fiscali-config" type="application/json">
   {
     "urlValidatori": {{ 'validatori.js' | asset_url | json }},
+    "selettoriCheckout": {{ selettori_checkout | json }},
     "modalitaColore": {{ block.settings.modalita_colore | json }},
     "colorePrimario": {{ block.settings.colore_primario | json }},
     "coloreTestoPrimario": {{ block.settings.colore_testo_primario | json }},
@@ -21,6 +29,81 @@
     "log": {{ block.settings.log_console | json }},
     "radiceNegozio": {{ routes.root_url | json }}
   }
+</script>
+
+{%- comment -%}
+  Scudo di partenza, e il motivo per cui non e' un modulo.
+
+  Il modulo in fondo al blocco viene eseguito solo dopo il parsing e dopo che la
+  CDN ha consegnato dati-fiscali.js: fra il momento in cui il bottone "Vai al
+  pagamento" diventa cliccabile e quello in cui il gate esiste passano da poche
+  decine di millisecondi a diversi secondi su una rete lenta. Un clic in quella
+  finestra arriva al check-out senza dati fiscali, ed e' successo davvero nelle
+  prove. Questo script e' classico e inline, quindi gira durante il parsing:
+  trattiene i clic finche' il gate vero non e' pronto.
+
+  Si toglie di mezzo da solo dopo dieci secondi: se il modulo non arriva, un
+  negozio che non incassa e' un danno peggiore di una fattura senza codice SDI.
+{%- endcomment -%}
+<script>
+  (function () {
+    try {
+      var config = JSON.parse(document.getElementById('dati-fiscali-config').textContent);
+      var selettori = [config.selettoriCheckout, config.selettoriExtra]
+        .filter(function (s) { return s; })
+        .join(', ');
+      if (!selettori) return;
+
+      var scudo = { attivo: true, inSospeso: false };
+      window.__datiFiscaliScudo = scudo;
+
+      function trattieni(evento) {
+        evento.preventDefault();
+        evento.stopPropagation();
+        evento.stopImmediatePropagation();
+        scudo.inSospeso = true;
+      }
+
+      function alClick(evento) {
+        if (!scudo.attivo) return;
+        var bersaglio =
+          evento.target && evento.target.closest ? evento.target.closest(selettori) : null;
+        if (bersaglio) trattieni(evento);
+      }
+
+      function alSubmit(evento) {
+        if (!scudo.attivo) return;
+        var modulo = evento.target;
+        if (!modulo || !modulo.matches || !modulo.matches('form[action*="/cart"]')) return;
+        // Senza submitter non sappiamo se e' un aggiornamento quantita': si lascia passare.
+        if (!evento.submitter || evento.submitter.name !== 'checkout') return;
+        trattieni(evento);
+      }
+
+      document.addEventListener('click', alClick, true);
+      document.addEventListener('submit', alSubmit, true);
+
+      /** true se c'era un tentativo di check-out da riprendere. */
+      scudo.rilascia = function () {
+        if (!scudo.attivo) return false;
+        scudo.attivo = false;
+        document.removeEventListener('click', alClick, true);
+        document.removeEventListener('submit', alSubmit, true);
+        var inSospeso = scudo.inSospeso;
+        scudo.inSospeso = false;
+        return inSospeso;
+      };
+
+      window.setTimeout(function () {
+        // Se il modulo e' arrivato ha gia' rilasciato: qui non resta nulla da fare.
+        if (!scudo.rilascia()) return;
+        var radice = String(config.radiceNegozio || '/').replace(/\/+$/, '');
+        window.location.href = radice + '/checkout';
+      }, 10000);
+    } catch (errore) {
+      /* Nessuno scudo e' meglio di un negozio rotto. */
+    }
+  })();
 </script>
 
 {% render 'modale-dati-fiscali', block: block %}
