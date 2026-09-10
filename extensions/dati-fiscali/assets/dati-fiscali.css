@@ -210,6 +210,12 @@
 .df-separatore {
   border: 0;
   border-top: 1px solid var(--df-bordo);
+  /* I temi stilizzano <hr> a modo loro, e il nostro finisce dentro il loro CSS:
+     quello di teclean gli dava background rgba(33,31,84,.2) e height 1.6px, che
+     sommati al bordo qui sopra facevano una riga doppia e di due colori. */
+  height: 0;
+  padding: 0;
+  background: none;
   margin: 0.875rem 0 1rem;
 }
 
