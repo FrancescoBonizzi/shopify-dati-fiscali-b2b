@@ -19,7 +19,7 @@
 }
 
 /* Dentro @supports e non come seconda dichiarazione: una custom property con una
-   funzione sconosciuta e' valida al parsing, quindi vincerebbe comunque e poi
+   funzione sconosciuta è valida al parsing, quindi vincerebbe comunque e poi
    fallirebbe al calcolo, lasciando i bordi color testo. */
 @supports (color: color-mix(in srgb, red 50%, blue)) {
   :root {
@@ -34,7 +34,7 @@
   border: 0;
   padding: 0;
   width: min(30rem, calc(100vw - 2rem));
-  /* La riga in vh e' il ripiego per i browser senza dvh (Safari < 15.4). */
+  /* La riga in vh è il ripiego per i browser senza dvh (Safari < 15.4). */
   max-height: calc(100vh - 2rem);
   max-height: calc(100dvh - 2rem);
   border-radius: var(--df-raggio);
@@ -43,7 +43,7 @@
   box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.25);
   /* Quello che non ci sta va tagliato dal box, non disegnato sopra il backdrop.
      Con overflow:visible, su schermi bassi (iPhone mini) i campi in fondo si
-     vedevano fuori dal riquadro bianco: era il contenuto piu' alto del dialog. */
+     vedevano fuori dal riquadro bianco: era il contenuto più alto del dialog. */
   overflow: hidden;
   overscroll-behavior: contain;
 }
@@ -66,7 +66,7 @@
 /* --------------------------------------------------------------- testata */
 
 /* Titolo e croce sulla stessa riga: il bottone di chiusura da solo occupava una
-   riga intera, che su mobile e' spazio verticale tolto ai campi. */
+   riga intera, che su mobile è spazio verticale tolto ai campi. */
 .df-testata {
   flex: 0 0 auto;
   display: flex;
@@ -75,7 +75,7 @@
   padding: 1.5rem 0.875rem 0.5rem 1.625rem;
 }
 
-/* Il titolo e' l'unica cosa in grassetto del modale: etichette e intestazioni
+/* Il titolo è l'unica cosa in grassetto del modale: etichette e intestazioni
    dei pannelli stanno sotto di lui di peso, oltre che di misura. */
 .df-titolo {
   flex: 1 1 auto;
@@ -98,7 +98,7 @@
   background: transparent;
   font-size: 1.5rem;
   line-height: 1;
-  /* Il bersaglio resta da 44px anche se il glifo e' piccolo. */
+  /* Il bersaglio resta da 44px anche se il glifo è piccolo. */
   min-width: 2.75rem;
   min-height: 2.75rem;
   margin-block: -0.5rem;
@@ -115,7 +115,7 @@
 /* ----------------------------------------------------------------- corpo */
 
 /* L'unica parte che scorre. La descrizione sta qui dentro e non nella testata:
-   e' un testo libero dalle impostazioni del tema, quindi di altezza ignota, e
+   è un testo libero dalle impostazioni del tema, quindi di altezza ignota, e
    fuori dallo scroller schiaccerebbe i campi. */
 .df-corpo {
   flex: 1 1 auto;
@@ -145,8 +145,8 @@
 
 /* Il modale fa due domande, chi sei e dove ti mando la fattura, e ognuna sta in
    un pannello dal fondo appena tinto. La separazione la fa il fondo: in tutto il
-   modale non c'e' piu' nessun filetto orizzontale, ne' fra le sezioni ne' ai lati
-   di "oppure". Lo spazio interno e' un gap unico, cosi' i campi nascosti (hidden,
+   modale non c'è più nessun filetto orizzontale, né fra le sezioni né ai lati
+   di "oppure". Lo spazio interno è un gap unico, così i campi nascosti (hidden,
    quindi display:none) e gli errori vuoti non lasciano buchi. */
 .df-pannello {
   display: flex;
@@ -175,7 +175,7 @@
 }
 
 /* Etichette piccole, in peso normale e attenuate: il valore che il cliente
-   scrive e' la cosa da leggere, l'etichetta e' la sua didascalia. */
+   scrive è la cosa da leggere, l'etichetta è la sua didascalia. */
 .df-campo label,
 .df-tipo legend {
   display: block;
@@ -202,7 +202,7 @@
 }
 
 .df-campo input:focus-visible {
-  /* Trasparente e non 0: nella modalita' a contrasto elevato il browser lo
+  /* Trasparente e non 0: nella modalità a contrasto elevato il browser lo
      ridisegna con i colori di sistema, mentre l'alone qui sotto sparirebbe. */
   outline: 2px solid transparent;
   outline-offset: 1px;
@@ -220,7 +220,7 @@
   border: 0;
   padding: 0;
   margin: 0;
-  /* Un fieldset ha min-inline-size: min-content e in una colonna flex puo'
+  /* Un fieldset ha min-inline-size: min-content e in una colonna flex può
      sfondare la larghezza del pannello. */
   min-width: 0;
 }
@@ -247,7 +247,7 @@
   cursor: pointer;
 }
 
-/* Il colore del testo e non il primario del tema: su teclean il primario e' un
+/* Il colore del testo e non il primario del tema: su teclean il primario è un
    verde pallido che sul bianco del pannello si vede a fatica. */
 .df-scelta input {
   flex: 0 0 auto;
@@ -289,7 +289,7 @@
   margin-top: 0.375rem;
 }
 
-/* L'errore di gruppo sta sotto il titolo del pannello, non in fondo: da li' si
+/* L'errore di gruppo sta sotto il titolo del pannello, non in fondo: da lì si
    legge come un problema dei due campi insieme, non del solo campo che lo precede. */
 .df-recapito > .df-errore:not(:empty) {
   margin-top: -0.25rem;
@@ -364,9 +364,9 @@
 
 /* ---------------------------------------------------------------- mobile */
 
-/* Il modale e' largo min(30rem, 100vw - 2rem): sotto i 32rem di finestra si
+/* Il modale è largo min(30rem, 100vw - 2rem): sotto i 32rem di finestra si
    stringe, quindi questa media query equivale a una container query sul modale,
-   senza dipendere dal supporto. Bordi piu' sottili, 16px di corpo e 12px di
+   senza dipendere dal supporto. Bordi più sottili, 16px di corpo e 12px di
    pannello invece di 26 e 18: su 358px di modale i campi tengono 302px. */
 @media (max-width: 32rem) {
   .df-testata {
@@ -397,7 +397,7 @@
 
    Si guarda data-df-dati, non data-df-stato: il gate considera valido un
    carrello vuoto, ma "Compra ora" porta al check-out senza passare dal
-   carrello. Ed e' un :not(), non un ='mancanti': cosi' restano nascosti anche
+   carrello. Ed è un :not(), non un ='mancanti': così restano nascosti anche
    prima che la lettura del carrello abbia risposto. */
 /* "Compra ora" della scheda prodotto: crea un check-out dal form del prodotto
    senza passare dal carrello, quindi gli attributi fiscali non ci finirebbero
@@ -407,7 +407,7 @@ html[data-df-nascondi-rapidi='1'] .shopify-payment-button {
 }
 
 /* Wallet della pagina carrello: partono dal carrello esistente, quindi si
-   portano dietro gli attributi. Si nascondono solo finche' i dati mancano,
+   portano dietro gli attributi. Si nascondono solo finché i dati mancano,
    e ricompaiono appena sono validi. */
 html[data-df-nascondi-rapidi='1']:not([data-df-dati='validi']) .shopify-cleanslate,
 html[data-df-nascondi-rapidi='1']:not([data-df-dati='validi']) [data-shopify='dynamic-checkout-cart'],

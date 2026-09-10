@@ -1,7 +1,7 @@
 /**
  * Validatori dei dati fiscali italiani per la fatturazione elettronica B2B.
  *
- * Unica fonte di verita': questo file e' importato sia dal modale nello storefront
+ * Unica fonte di verità: questo file è importato sia dal modale nello storefront
  * (come ES module servito dalla CDN di Shopify) sia dai test Node.
  * Per questo non tocca il DOM e non ha dipendenze.
  */
@@ -77,7 +77,7 @@ export function partitaIvaValida(raw) {
   if (!((ufficio >= 1 && ufficio <= 100) || UFFICI_SPECIALI.includes(ufficio))) return false;
 
   // 4. checksum: le cifre in posizione pari (1-based) si raddoppiano, se >9 si sottrae 9;
-  //    la cifra di controllo e' inclusa nella somma, che deve essere multiplo di 10
+  //    la cifra di controllo è inclusa nella somma, che deve essere multiplo di 10
   let somma = 0;
   for (let i = 0; i < 11; i += 1) {
     let n = s.charCodeAt(i) - 48;
@@ -130,7 +130,7 @@ function carattereDiControllo(codice) {
  * con omocodia passano da soli.
  *
  * Il codice fiscale numerico a 11 cifre non è accettato: appartiene alle società, dove
- * coincide con la partita IVA, e li' il campo va lasciato vuoto.
+ * coincide con la partita IVA, e lì il campo va lasciato vuoto.
  */
 export function codiceFiscaleValido(raw) {
   const s = normalizzaCodiceFiscale(raw);
@@ -143,15 +143,15 @@ export function codiceFiscaleValido(raw) {
 /**
  * Codice destinatario SDI.
  * 7 caratteri alfanumerici per i privati; 6 per la Pubblica Amministrazione
- * (Codice Univoco Ufficio IPA), accettati solo se `ammettiPa` e' attivo.
- * "0000000" e' un valore legittimo ma impone la PEC: vedi sdiAssente().
+ * (Codice Univoco Ufficio IPA), accettati solo se `ammettiPa` è attivo.
+ * "0000000" è un valore legittimo ma impone la PEC: vedi sdiAssente().
  */
 export function codiceSdiValido(raw, { ammettiPa = false } = {}) {
   const s = normalizzaCodiceSdi(raw);
   return ammettiPa ? /^[A-Z0-9]{6,7}$/.test(s) : /^[A-Z0-9]{7}$/.test(s);
 }
 
-/** true se il codice SDI e' formalmente valido ma significa "recapito non disponibile". */
+/** true se il codice SDI è formalmente valido ma significa "recapito non disponibile". */
 export function sdiAssente(raw) {
   return normalizzaCodiceSdi(raw) === SDI_NON_DISPONIBILE;
 }
@@ -225,12 +225,12 @@ export function validaDatiFiscali(dati = {}, { ammettiPa = false } = {}) {
     errori.partitaIva = MESSAGGI.partitaIvaNonValida;
   }
 
-  // Codice fiscale: solo per le persone fisiche, e in quest'ordine, perche' chi
+  // Codice fiscale: solo per le persone fisiche, e in quest'ordine, perché chi
   // copia la partita IVA deve leggere il motivo vero invece di "non valido".
   if (personaFisica) {
     if (!valori.codiceFiscale) {
       errori.codiceFiscale = MESSAGGI.codiceFiscaleMancante;
-      // Confrontata con la normalizzazione della partita IVA, cosi' "IT12345670017"
+      // Confrontata con la normalizzazione della partita IVA, così "IT12345670017"
       // e "123.456.700.17" vengono riconosciuti per quello che sono.
     } else if (valori.partitaIva && normalizzaPartitaIva(valori.codiceFiscale) === valori.partitaIva) {
       errori.codiceFiscale = MESSAGGI.codiceFiscaleUgualePartitaIva;

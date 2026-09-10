@@ -9,8 +9,8 @@
 
 {%- comment -%}
   I selettori delle uscite verso il check-out stanno qui e non nel JavaScript
-  perche' li leggono in due: lo scudo di partenza qui sotto e il gate vero in
-  dati-fiscali.js. Una lista sola, cosi' non possono divergere.
+  perché li leggono in due: lo scudo di partenza qui sotto e il gate vero in
+  dati-fiscali.js. Una lista sola, così non possono divergere.
 {%- endcomment -%}
 {%- assign selettori_checkout = '[name="checkout"], a[href$="/checkout"], a[href*="/checkout?"], a[href*="/cart/checkout"], [data-checkout-trigger], #checkout' -%}
 
@@ -32,18 +32,18 @@
 </script>
 
 {%- comment -%}
-  Scudo di partenza, e il motivo per cui non e' un modulo.
+  Scudo di partenza, e il motivo per cui non è un modulo.
 
   Il modulo in fondo al blocco viene eseguito solo dopo il parsing e dopo che la
   CDN ha consegnato dati-fiscali.js: fra il momento in cui il bottone "Vai al
   pagamento" diventa cliccabile e quello in cui il gate esiste passano da poche
   decine di millisecondi a diversi secondi su una rete lenta. Un clic in quella
-  finestra arriva al check-out senza dati fiscali, ed e' successo davvero nelle
-  prove. Questo script e' classico e inline, quindi gira durante il parsing:
-  trattiene i clic finche' il gate vero non e' pronto.
+  finestra arriva al check-out senza dati fiscali, ed è successo davvero nelle
+  prove. Questo script è classico e inline, quindi gira durante il parsing:
+  trattiene i clic finché il gate vero non è pronto.
 
   Si toglie di mezzo da solo dopo dieci secondi: se il modulo non arriva, un
-  negozio che non incassa e' un danno peggiore di una fattura senza codice SDI.
+  negozio che non incassa è un danno peggiore di una fattura senza codice SDI.
 {%- endcomment -%}
 <script>
   (function () {
@@ -75,7 +75,7 @@
         if (!scudo.attivo) return;
         var modulo = evento.target;
         if (!modulo || !modulo.matches || !modulo.matches('form[action*="/cart"]')) return;
-        // Senza submitter non sappiamo se e' un aggiornamento quantita': si lascia passare.
+        // Senza submitter non sappiamo se è un aggiornamento quantità: si lascia passare.
         if (!evento.submitter || evento.submitter.name !== 'checkout') return;
         trattieni(evento);
       }
@@ -95,13 +95,13 @@
       };
 
       window.setTimeout(function () {
-        // Se il modulo e' arrivato ha gia' rilasciato: qui non resta nulla da fare.
+        // Se il modulo è arrivato ha già rilasciato: qui non resta nulla da fare.
         if (!scudo.rilascia()) return;
         var radice = String(config.radiceNegozio || '/').replace(/\/+$/, '');
         window.location.href = radice + '/checkout';
       }, 10000);
     } catch (errore) {
-      /* Nessuno scudo e' meglio di un negozio rotto. */
+      /* Nessuno scudo è meglio di un negozio rotto. */
     }
   })();
 </script>

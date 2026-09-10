@@ -150,7 +150,7 @@ test('validaDatiFiscali: tipo cliente, ragione sociale e partita IVA obbligatori
 test('validaDatiFiscali: il codice fiscale segue il tipo di cliente', () => {
   const base = { ragioneSociale: 'Rossi Mario', partitaIva: '12345670017', codiceSdi: 'ABC1234' };
 
-  // Societa': il campo non esiste, e un valore residuo non deve finire nel carrello.
+  // Società: il campo non esiste, e un valore residuo non deve finire nel carrello.
   const societa = validaDatiFiscali({ ...base, tipoCliente: 'azienda', codiceFiscale: 'RSSMRA80A01H501U' });
   assert.equal(societa.ok, true);
   assert.equal(societa.valori.codiceFiscale, '');

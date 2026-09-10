@@ -4,10 +4,10 @@
 # extension non rientra fra le estensioni compatibili con le app "extension-only"
 # (confermato da Shopify il 30/07/2026), quindi l'app deve dichiarare un URL.
 # Punta a una pagina statica su GitHub Pages: nessun server da mantenere.
-# La pagina e' in docs/ di questo stesso repo, pubblicata da GitHub Pages.
+# La pagina è in docs/ di questo stesso repo, pubblicata da GitHub Pages.
 #
-# `embedded = false` e' obbligatorio: la pagina servita da GitHub Pages e' statica
-# e non usa App Bridge, quindi non puo' essere caricata in un iframe dell'admin.
+# `embedded = false` è obbligatorio: la pagina servita da GitHub Pages è statica
+# e non usa App Bridge, quindi non può essere caricata in un iframe dell'admin.
 #
 # Attenzione: `shopify app config link` sovrascrive questo file con la
 # configurazione remota. Dopo ogni link, ricontrollare application_url,

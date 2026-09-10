@@ -29,7 +29,7 @@ const TIPO_DITTA_INDIVIDUALE = 'ditta_individuale';
 /**
  * Quanto vale la precompilazione salvata nel browser. Oltre, i campi ripartono vuoti:
  * a distanza di mesi un recapito o una ragione sociale possono essere cambiati, e i
- * campi gia' pieni si confermano per inerzia. Non tocca il gate, che guarda solo il
+ * campi già pieni si confermano per inerzia. Non tocca il gate, che guarda solo il
  * carrello: il modale si apre comunque e chiede conferma a ogni carrello nuovo.
  */
 const DURATA_MEMORIA_LOCALE = 90 * 24 * 60 * 60 * 1000;
@@ -58,7 +58,7 @@ let modale;
 let form;
 let bottone;
 let apertoAutomaticamente = false;
-/** true appena il cliente tocca i radio: da li' in poi la sua scelta non si sovrascrive. */
+/** true appena il cliente tocca i radio: da lì in poi la sua scelta non si sovrascrive. */
 let tipoClienteToccato = false;
 /** 'checkout' se il modale nasce da un tentativo di check-out, 'auto' se dalla pagina carrello. */
 let motivoApertura = 'checkout';
@@ -71,16 +71,16 @@ export async function avvia() {
 
   if (!modale || !form) {
     console.warn('[dati-fiscali] markup del modale non trovato');
-    // Senza modale non c'e' nulla da chiedere: lo scudo va tolto o il negozio
+    // Senza modale non c'è nulla da chiedere: lo scudo va tolto o il negozio
     // resta con i bottoni di check-out inerti per dieci secondi.
     rilasciaScudo();
     return;
   }
 
-  // I listener vanno registrati subito: un click puo' arrivare prima che il
+  // I listener vanno registrati subito: un click può arrivare prima che il
   // carrello sia stato letto. In quel caso intercettiamo e decidiamo dopo.
   registraGate();
-  // Da qui comanda il gate vero, e lo scudo inline puo' farsi da parte. Se ha
+  // Da qui comanda il gate vero, e lo scudo inline può farsi da parte. Se ha
   // trattenuto un clic mentre questo file era ancora in volo, lo riprendiamo
   // appena sappiamo se i dati del carrello vanno bene.
   const clicTrattenuto = rilasciaScudo();
@@ -107,7 +107,7 @@ export async function avvia() {
     validatori = await import(config.urlValidatori);
     await aggiornaStato();
   } catch (errore) {
-    // Stessa politica del carrello non leggibile: il gate e' UX, non sicurezza.
+    // Stessa politica del carrello non leggibile: il gate è UX, non sicurezza.
     // Senza validatori non possiamo giudicare i dati, e tenere chiuso il
     // check-out farebbe perdere l'ordine invece di salvarne la fattura.
     console.warn('[dati-fiscali] validatori non caricati: il check-out resta aperto', errore);
@@ -119,7 +119,7 @@ export async function avvia() {
   }
 
   if (clicTrattenuto) {
-    // Il cliente aveva gia' chiesto di pagare: si riprende da li'.
+    // Il cliente aveva già chiesto di pagare: si riprende da lì.
     apertoAutomaticamente = true;
     tentativoCheckout();
   } else if (config.apriSuCarrello && sullaPaginaCarrello() && !apertoAutomaticamente && stato && !stato.ok) {
@@ -133,8 +133,8 @@ export async function avvia() {
 }
 
 /**
- * Lo scudo inline del blocco trattiene i clic sul check-out finche' questo file
- * non e' stato eseguito. Restituisce true se ne aveva trattenuto uno.
+ * Lo scudo inline del blocco trattiene i clic sul check-out finché questo file
+ * non è stato eseguito. Restituisce true se ne aveva trattenuto uno.
  */
 function rilasciaScudo() {
   const scudo = window.__datiFiscaliScudo;
@@ -153,7 +153,7 @@ const MUTAZIONI_CARRELLO = /\/cart\/(add|change|update|clear)(\.js)?(\?|$)/;
 /**
  * I temi aggiungono al carrello via AJAX senza ricaricare la pagina: senza
  * questo, lo stato resta quello del primo caricamento e la CSS continua a
- * mostrare i pagamenti rapidi anche dopo che il carrello si e' riempito.
+ * mostrare i pagamenti rapidi anche dopo che il carrello si è riempito.
  * Avvolgiamo fetch e XMLHttpRequest senza alterarne il comportamento.
  */
 function osservaMutazioniCarrello() {
@@ -224,7 +224,7 @@ async function aggiornaStato() {
     if (!risposta.ok) throw new Error(`HTTP ${risposta.status}`);
     carrello = await risposta.json();
   } catch (errore) {
-    // Se il carrello non e' leggibile non blocchiamo il negozio: il gate e' UX,
+    // Se il carrello non è leggibile non blocchiamo il negozio: il gate è UX,
     // non sicurezza, e un errore di rete non deve impedire di comprare.
     console.warn('[dati-fiscali] carrello non leggibile', errore);
     stato = { ok: true, dati: {}, datiOk: true };
@@ -235,12 +235,12 @@ async function aggiornaStato() {
 
   const dati = datiDaAttributi(carrello.attributes);
   const datiOk = validatori.validaDatiFiscali(dati, { ammettiPa: !!config.ammettiPa }).ok;
-  // Carrello vuoto: non c'e' nulla da bloccare.
+  // Carrello vuoto: non c'è nulla da bloccare.
   const ok = !carrello.item_count || datiOk;
   stato = { ok, dati, datiOk };
 
   document.documentElement.dataset.dfStato = ok ? 'completi' : 'incompleti';
-  // I pagamenti rapidi vanno nascosti in base alla validita' dei dati, non al
+  // I pagamenti rapidi vanno nascosti in base alla validità dei dati, non al
   // verdetto del gate: "Compra ora" non passa dal carrello, quindi a carrello
   // vuoto il gate dice ok ma quel bottone porterebbe comunque al check-out.
   document.documentElement.dataset.dfDati = datiOk ? 'validi' : 'mancanti';
@@ -285,7 +285,7 @@ function registraGate() {
       const modulo = evento.target;
       if (!(modulo instanceof HTMLFormElement)) return;
       if (!modulo.matches('form[action*="/cart"]')) return;
-      // Senza submitter non sappiamo se e' un aggiornamento quantita': non intercettiamo.
+      // Senza submitter non sappiamo se è un aggiornamento quantità: non intercettiamo.
       if (!evento.submitter || evento.submitter.name !== 'checkout') return;
       if (stato && stato.ok) return;
       ferma(evento);
@@ -310,14 +310,14 @@ async function tentativoCheckout() {
       await aggiornaStato();
     } catch (errore) {
       // Il cliente ha chiesto di pagare e noi non sappiamo rispondere: lasciarlo
-      // su un bottone che non reagisce e' il peggiore degli esiti possibili.
+      // su un bottone che non reagisce è il peggiore degli esiti possibili.
       console.warn('[dati-fiscali] validatori non caricati: check-out lasciato passare', errore);
       vaiAlCheckout();
       return;
     }
   }
 
-  // Il gate chiama qui solo quando lo stato e' negativo, ma la ripresa di un clic
+  // Il gate chiama qui solo quando lo stato è negativo, ma la ripresa di un clic
   // trattenuto dallo scudo arriva anche a dati validi: decide questo controllo.
   if (stato && stato.ok) {
     vaiAlCheckout();
@@ -389,8 +389,8 @@ function precompila() {
     input.value = daCarrello[nome] || salvati[nome] || '';
   }
 
-  // "Societa'" e' preselezionato nel markup, quindi qui non basta guardare se c'e'
-  // gia' una scelta: un tipo salvato deve poter vincere sul default, ma non su una
+  // "Società" è preselezionato nel markup, quindi qui non basta guardare se c'è
+  // già una scelta: un tipo salvato deve poter vincere sul default, ma non su una
   // scelta appena fatta dal cliente.
   if (!tipoClienteToccato) {
     impostaTipoCliente(daCarrello.tipoCliente || salvati.tipoCliente || '');
@@ -401,7 +401,7 @@ function precompila() {
 function leggiDaLocalStorage() {
   try {
     const salvato = JSON.parse(window.localStorage.getItem(CHIAVE_LOCALE));
-    // Senza data e' il formato precedente: si scarta invece di indovinarne l'eta'.
+    // Senza data è il formato precedente: si scarta invece di indovinarne l'età.
     if (!salvato || typeof salvato.salvatoIl !== 'number') return {};
     if (Date.now() - salvato.salvatoIl > DURATA_MEMORIA_LOCALE) {
       window.localStorage.removeItem(CHIAVE_LOCALE);
@@ -417,7 +417,7 @@ function scriviInLocalStorage(valori) {
   try {
     window.localStorage.setItem(CHIAVE_LOCALE, JSON.stringify({ salvatoIl: Date.now(), valori }));
   } catch {
-    /* modalita' privata o storage pieno: non e' un problema */
+    /* modalità privata o storage pieno: non è un problema */
   }
 }
 
@@ -504,7 +504,7 @@ async function salvaNelCarrello(valori) {
         [CHIAVI.codiceFiscale]: valori.codiceFiscale,
         [CHIAVI.codiceSdi]: valori.codiceSdi,
         [CHIAVI.pec]: valori.pec,
-        // Scritto solo dopo che il validatore e' passato: e' il flag che permette
+        // Scritto solo dopo che il validatore è passato: è il flag che permette
         // di distinguere a colpo d'occhio gli ordini raccolti dal modale.
         [CHIAVI.validati]: '1',
         [CHIAVI.versione]: validatori.VERSIONE_VALIDATORE,
@@ -522,11 +522,11 @@ function applicaColori() {
   const radice = document.documentElement.style;
   radice.setProperty('--df-raggio', `${config.raggioBordi ?? 8}px`);
 
-  // Testo e sfondo del modale seguono il body del tema, in entrambe le modalita':
+  // Testo e sfondo del modale seguono il body del tema, in entrambe le modalità:
   // i grigi del modale (pannelli, bordi, etichette) sono derivati da questi due
   // in CSS, e su un tema blu notte devono venire blu notte. Solo se sono
   // entrambi pienamente opachi: con uno solo dei due si rischia testo chiaro su
-  // fondo chiaro, e il ripiego nero su bianco e' sempre leggibile.
+  // fondo chiaro, e il ripiego nero su bianco è sempre leggibile.
   const superficie = coloriSuperficieDalTema();
   if (superficie) {
     radice.setProperty('--df-testo', superficie.testo);
@@ -589,9 +589,9 @@ function coloriDalTema() {
 }
 
 /** Alfa di un colore come lo restituisce getComputedStyle: rgb()/rgba(), con le
- *  virgole o con la barra. 1 se il canale manca o il formato non e' riconosciuto.
+ *  virgole o con la barra. 1 se il canale manca o il formato non è riconosciuto.
  *  Non si prende "l'ultimo numero prima della parentesi": in rgb(0, 0, 0) quello
- *  e' il blu, e il nero puro risultava trasparente. */
+ *  è il blu, e il nero puro risultava trasparente. */
 function alfaDi(colore) {
   if (!colore || colore === 'transparent') return 0;
   const m = colore.match(

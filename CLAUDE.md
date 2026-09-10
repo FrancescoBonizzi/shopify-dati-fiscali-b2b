@@ -137,8 +137,8 @@ importato sia dallo storefront sia dai test Node. Va tenuto così.
 - **Italiano ovunque**: codice, commenti, messaggi di commit, documentazione. Nomi di
   variabili e funzioni compresi.
 - **Accenti veri sempre** (`è`, `perché`, `così`, `più`), mai l'apostrofo al posto
-  dell'accento. Nel codice esistono residui scritti come `e'` o `cosi'`: non sono un
-  modello da seguire, e si correggono quando si tocca quella riga.
+  dell'accento. Restano legittimi gli apostrofi veri: le elisioni (`l'ordine`,
+  `un'idea`) e i troncamenti (`un po'`).
 - I commenti spiegano **perché**, non cosa. Un commento che ripete il codice va tolto.
 - Unità metriche decimali.
 - **UI: prima si toglie testo, poi si comprime.** Se qualcosa non ci sta, si cerca la
