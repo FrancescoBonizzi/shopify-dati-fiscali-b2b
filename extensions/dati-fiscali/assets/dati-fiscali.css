@@ -1,17 +1,33 @@
 /* Dati Fiscali B2B — stile del modale.
-   I colori arrivano da custom property impostate a runtime: o copiate dal bottone
-   di check-out del tema, o dalle impostazioni dell'app embed block. */
+   I colori arrivano da custom property impostate a runtime: primario e testo sul
+   primario copiati dal bottone di check-out del tema (o dalle impostazioni), testo
+   e sfondo copiati dal body del tema. I grigi sono derivati da questi due: su un
+   tema blu notte vengono blu notte, su un tema nero vengono neutri. */
 
 :root {
   --df-primario: #121212;
   --df-primario-testo: #ffffff;
   --df-raggio: 8px;
   --df-testo: #121212;
-  --df-testo-tenue: #6b6b6b;
-  --df-bordo: #d0d0d0;
-  --df-bordo-focus: var(--df-primario);
-  --df-errore: #b3261e;
   --df-sfondo: #ffffff;
+  --df-errore: #b3261e;
+  /* Ripieghi per i browser senza color-mix (Safari < 16.2): grigi neutri. */
+  --df-testo-tenue: #6b6b6b;
+  --df-bordo: #d4d4d8;
+  --df-pannello: #f4f4f6;
+  --df-alone: rgba(18, 18, 18, 0.14);
+}
+
+/* Dentro @supports e non come seconda dichiarazione: una custom property con una
+   funzione sconosciuta e' valida al parsing, quindi vincerebbe comunque e poi
+   fallirebbe al calcolo, lasciando i bordi color testo. */
+@supports (color: color-mix(in srgb, red 50%, blue)) {
+  :root {
+    --df-testo-tenue: color-mix(in srgb, var(--df-testo) 66%, var(--df-sfondo));
+    --df-bordo: color-mix(in srgb, var(--df-testo) 17%, var(--df-sfondo));
+    --df-pannello: color-mix(in srgb, var(--df-testo) 5%, var(--df-sfondo));
+    --df-alone: color-mix(in srgb, var(--df-testo) 14%, transparent);
+  }
 }
 
 .df-modale {
@@ -56,15 +72,19 @@
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
-  padding: 1rem 0.875rem 0.75rem 1.5rem;
+  padding: 1.5rem 0.875rem 0.5rem 1.625rem;
 }
 
+/* Il titolo e' l'unica cosa in grassetto del modale: etichette e intestazioni
+   dei pannelli stanno sotto di lui di peso, oltre che di misura. */
 .df-titolo {
   flex: 1 1 auto;
   margin: 0;
   padding-top: 0.125rem;
   font-size: 1.25rem;
+  font-weight: 600;
   line-height: 1.3;
+  letter-spacing: -0.005em;
 }
 
 .df-modale__chiudi-form {
@@ -105,13 +125,13 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding-inline: 1.5rem;
+  padding: 0.625rem 1.625rem 0;
 }
 
 /* Facoltativa, e per impostazione predefinita vuota: il modale si legge meglio
    senza. Resta per i negozi che hanno qualcosa di specifico da dire. */
 .df-descrizione {
-  margin: 0 0 1.25rem;
+  margin: 0 0 1rem;
   color: var(--df-testo-tenue);
   font-size: 0.9375rem;
   line-height: 1.5;
@@ -121,38 +141,73 @@
   margin: 0;
 }
 
-/* Il ritmo verticale è stretto di proposito: il modale chiede cinque dati e un tipo
-   di cliente, e su uno schermo basso ogni margine di troppo spinge il bottone sotto
-   la piega. L'input resta comunque alto ~44px, il bersaglio touch minimo. */
-.df-campo {
-  margin-bottom: 0.875rem;
+/* -------------------------------------------------------------- pannelli */
+
+/* Il modale fa due domande, chi sei e dove ti mando la fattura, e ognuna sta in
+   un pannello dal fondo appena tinto. La separazione la fa il fondo: in tutto il
+   modale non c'e' piu' nessun filetto orizzontale, ne' fra le sezioni ne' ai lati
+   di "oppure". Lo spazio interno e' un gap unico, cosi' i campi nascosti (hidden,
+   quindi display:none) e gli errori vuoti non lasciano buchi. */
+.df-pannello {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.125rem 1.125rem;
+  border-radius: calc(var(--df-raggio) + 2px);
+  background: var(--df-pannello);
 }
 
-.df-campo label,
-.df-tipo legend,
-.df-recapito legend {
-  display: block;
-  font-size: 0.875rem;
+.df-pannello + .df-pannello {
+  margin-top: 0.75rem;
+}
+
+.df-pannello__titolo {
+  margin: 0;
+  font-size: 0.8125rem;
   font-weight: 600;
+  line-height: 1.3;
+}
+
+/* ----------------------------------------------------------------- campi */
+
+.df-campo {
+  margin: 0;
+}
+
+/* Etichette piccole, in peso normale e attenuate: il valore che il cliente
+   scrive e' la cosa da leggere, l'etichetta e' la sua didascalia. */
+.df-campo label,
+.df-tipo legend {
+  display: block;
   margin-bottom: 0.25rem;
+  font-size: 0.78125rem;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--df-testo-tenue);
 }
 
 .df-campo input {
   width: 100%;
   box-sizing: border-box;
-  padding: 0.625rem 0.75rem;
+  height: 2.5rem;
+  margin: 0;
+  padding: 0 0.75rem;
   font: inherit;
   font-size: 1rem; /* evita lo zoom automatico su iOS */
   color: var(--df-testo);
   background: var(--df-sfondo);
   border: 1px solid var(--df-bordo);
   border-radius: var(--df-raggio);
+  transition: border-color 120ms, box-shadow 120ms;
 }
 
 .df-campo input:focus-visible {
-  outline: 2px solid var(--df-bordo-focus);
+  /* Trasparente e non 0: nella modalita' a contrasto elevato il browser lo
+     ridisegna con i colori di sistema, mentre l'alone qui sotto sparirebbe. */
+  outline: 2px solid transparent;
   outline-offset: 1px;
-  border-color: var(--df-bordo-focus);
+  border-color: var(--df-testo);
+  box-shadow: 0 0 0 3px var(--df-alone);
 }
 
 .df-campo input[aria-invalid='true'] {
@@ -164,7 +219,10 @@
 .df-tipo {
   border: 0;
   padding: 0;
-  margin: 0 0 0.875rem;
+  margin: 0;
+  /* Un fieldset ha min-inline-size: min-content e in una colonna flex puo'
+     sfondare la larghezza del pannello. */
+  min-width: 0;
 }
 
 .df-tipo legend {
@@ -176,82 +234,44 @@
 .df-scelte {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 1.25rem;
+  gap: 0.125rem 1.375rem;
 }
 
 .df-scelta {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.5625rem;
   /* Il bersaglio touch resta comodo anche se il testo è piccolo. */
-  min-height: 2.25rem;
+  min-height: 1.875rem;
   font-size: 0.9375rem;
   cursor: pointer;
 }
 
+/* Il colore del testo e non il primario del tema: su teclean il primario e' un
+   verde pallido che sul bianco del pannello si vede a fatica. */
 .df-scelta input {
+  flex: 0 0 auto;
   width: 1.125rem;
   height: 1.125rem;
   margin: 0;
-  accent-color: var(--df-primario);
+  accent-color: var(--df-testo);
 }
 
 .df-tipo > .df-errore:not(:empty) {
-  margin-top: 0.25rem;
+  margin-top: -0.25rem;
 }
 
 /* ---------------------------------------------------------------- recapito */
 
-/* Una riga sola, dello stesso peso di quelle che affiancano "oppure": separa gli
-   identificativi del cliente dal recapito, che sono due domande diverse.
-   E' un <hr> e non il border-top del fieldset perche' la <legend> buca il bordo del
-   fieldset per rendering nativo: la linea partirebbe dopo il testo invece di stargli
-   sopra. */
-.df-separatore {
-  border: 0;
-  border-top: 1px solid var(--df-bordo);
-  /* I temi stilizzano <hr> a modo loro, e il nostro finisce dentro il loro CSS:
-     quello di teclean gli dava background rgba(33,31,84,.2) e height 1.6px, che
-     sommati al bordo qui sopra facevano una riga doppia e di due colori. */
-  height: 0;
-  padding: 0;
-  background: none;
-  margin: 0.875rem 0 1rem;
-}
-
-.df-recapito {
-  border: 0;
-  padding: 0;
-  margin: 0 0 0.875rem;
-}
-
-.df-recapito legend {
-  padding: 0;
-  margin-bottom: 0.75rem;
-  /* Piu' grande delle etichette che introduce, se no sembra una di loro. */
-  font-size: 1rem;
-}
-
 /* Dice con la struttura quello che prima erano tre righe di prosa: dei due
-   recapiti ne basta uno. */
+   recapiti ne basta uno. Senza filetti ai lati: sarebbero le uniche righe
+   orizzontali del modale. */
 .df-oppure {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 0 0 0.875rem;
-  font-size: 0.8125rem;
+  margin: 0;
+  text-align: center;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
   color: var(--df-testo-tenue);
-}
-
-.df-oppure::before,
-.df-oppure::after {
-  content: '';
-  flex: 1 1 auto;
-  border-top: 1px solid var(--df-bordo);
-}
-
-.df-recapito .df-campo:last-of-type {
-  margin-bottom: 0;
 }
 
 .df-errore {
@@ -269,14 +289,14 @@
   margin-top: 0.375rem;
 }
 
-/* L'errore di gruppo sta sotto la legend, non in fondo: da li' si legge come
-   un problema dei due campi insieme, non del solo campo che lo precede. */
+/* L'errore di gruppo sta sotto il titolo del pannello, non in fondo: da li' si
+   legge come un problema dei due campi insieme, non del solo campo che lo precede. */
 .df-recapito > .df-errore:not(:empty) {
-  margin: -0.25rem 0 0.75rem;
+  margin-top: -0.25rem;
 }
 
 .df-errore--generale {
-  margin-bottom: 1rem;
+  margin-top: 0.75rem;
 }
 
 /* Appiccicato in fondo all'area che scorre: su schermi bassi il bottone
@@ -285,8 +305,8 @@
 .df-azioni {
   position: sticky;
   bottom: 0;
-  margin-top: 0.5rem;
-  padding-block: 0.5rem 1.5rem;
+  margin-top: 0.75rem;
+  padding-block: 0.5rem 1.625rem;
   background: var(--df-sfondo);
 }
 
@@ -304,12 +324,14 @@
 
 .df-bottone {
   width: 100%;
+  height: 3rem;
   appearance: none;
   border: 0;
   cursor: pointer;
   font: inherit;
+  font-size: 0.9375rem;
   font-weight: 600;
-  padding: 0.8125rem 1rem;
+  padding: 0 1rem;
   border-radius: var(--df-raggio);
   background: var(--df-primario);
   color: var(--df-primario-testo);
@@ -330,7 +352,7 @@
 .df-credito {
   flex: 0 0 auto;
   margin: 0;
-  padding: 0 1.5rem 1rem;
+  padding: 0 1.625rem 1rem;
   font-size: 0.75rem;
   text-align: center;
   color: var(--df-testo-tenue);
@@ -338,6 +360,34 @@
 
 .df-credito a {
   color: inherit;
+}
+
+/* ---------------------------------------------------------------- mobile */
+
+/* Il modale e' largo min(30rem, 100vw - 2rem): sotto i 32rem di finestra si
+   stringe, quindi questa media query equivale a una container query sul modale,
+   senza dipendere dal supporto. Bordi piu' sottili, 16px di corpo e 12px di
+   pannello invece di 26 e 18: su 358px di modale i campi tengono 302px. */
+@media (max-width: 32rem) {
+  .df-testata {
+    padding-left: 1rem;
+  }
+
+  .df-corpo {
+    padding-inline: 1rem;
+  }
+
+  .df-pannello {
+    padding: 0.75rem 0.75rem 0.875rem;
+  }
+
+  .df-azioni {
+    padding-bottom: 1.25rem;
+  }
+
+  .df-credito {
+    padding-inline: 1rem;
+  }
 }
 
 /* ------------------------------------------------------- pagamenti rapidi */
@@ -369,6 +419,12 @@ html[data-df-nascondi-rapidi='1']:not([data-df-dati='validi']) .dynamic-checkout
 @media (prefers-reduced-motion: no-preference) {
   .df-modale[open] {
     animation: df-entra 160ms ease-out;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .df-campo input {
+    transition: none;
   }
 }
 

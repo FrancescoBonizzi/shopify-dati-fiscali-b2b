@@ -40,8 +40,10 @@ elettronica che viene scartata, e il costo lo paghi in tempo di amministrazione.
   riparte da vuoti. È solo una comodità per chi riordina: il gate guarda gli attributi
   del carrello, non questa memoria, quindi a ogni carrello nuovo il modale si apre e
   chiede conferma comunque.
-- Colori copiati automaticamente dal bottone di check-out del tema, con override manuale
-  nelle impostazioni dell'app embed block.
+- Colori copiati automaticamente dal tema: primario dal bottone di check-out (con override
+  manuale nelle impostazioni dell'app embed block), testo e sfondo dal body. I grigi di
+  pannelli, bordi ed etichette sono derivati da questi ultimi con `color-mix`, così su un
+  tema blu notte vengono blu notte e su uno nero restano neutri.
 
 ## Cosa NON fa, e perché
 

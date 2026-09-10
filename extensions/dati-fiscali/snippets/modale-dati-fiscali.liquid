@@ -26,85 +26,100 @@
 
     <form id="df-form" class="df-form" novalidate>
       {%- comment -%}
-        Il tipo di cliente viene per primo perché governa i campi sotto: le società
-        hanno il codice fiscale uguale alla partita IVA, le persone fisiche no.
-        "Società" parte selezionato perché è il caso della grande maggioranza dei
-        clienti; chi è ditta individuale deve accorgersene e cambiare opzione.
+        Due pannelli per le due domande del modale: chi è il cliente, e dove va
+        recapitata la fattura. La separazione la fa lo sfondo dei pannelli.
       {%- endcomment -%}
-      <fieldset class="df-tipo" aria-describedby="df-errore-tipoCliente">
-        <legend>Tipo di cliente</legend>
+      <div class="df-pannello">
+        {%- comment -%}
+          Il tipo di cliente viene per primo perché governa i campi sotto: le società
+          hanno il codice fiscale uguale alla partita IVA, le persone fisiche no.
+          "Società" parte selezionato perché è il caso della grande maggioranza dei
+          clienti; chi è ditta individuale deve accorgersene e cambiare opzione.
+        {%- endcomment -%}
+        <fieldset class="df-tipo" aria-describedby="df-errore-tipoCliente">
+          <legend>Tipo di cliente</legend>
 
-        <div class="df-scelte">
-          <label class="df-scelta">
-            <input type="radio" name="tipoCliente" value="azienda" checked>
-            <span>Società</span>
-          </label>
+          <div class="df-scelte">
+            <label class="df-scelta">
+              <input type="radio" name="tipoCliente" value="azienda" checked>
+              <span>Società</span>
+            </label>
 
-          <label class="df-scelta">
-            <input type="radio" name="tipoCliente" value="ditta_individuale">
-            <span>Ditta individuale o professionista</span>
-          </label>
+            <label class="df-scelta">
+              <input type="radio" name="tipoCliente" value="ditta_individuale">
+              <span>Ditta individuale o professionista</span>
+            </label>
+          </div>
+
+          {%- comment -%}
+            Con un'opzione preselezionata dal form non arriva mai un tipo mancante;
+            resta per l'altra strada del validatore, quella sui dati già nel carrello.
+          {%- endcomment -%}
+          <p class="df-errore" id="df-errore-tipoCliente" role="alert"></p>
+        </fieldset>
+
+        <div class="df-campo">
+          <label for="df-ragione-sociale" id="df-etichetta-ragione-sociale">Ragione sociale</label>
+          <input
+            type="text"
+            id="df-ragione-sociale"
+            name="ragioneSociale"
+            autocomplete="organization"
+            required
+            aria-describedby="df-errore-ragioneSociale"
+          >
+          <p class="df-errore" id="df-errore-ragioneSociale" role="alert"></p>
+        </div>
+
+        <div class="df-campo">
+          <label for="df-partita-iva">Partita IVA</label>
+          <input
+            type="text"
+            id="df-partita-iva"
+            name="partitaIva"
+            inputmode="numeric"
+            maxlength="16"
+            placeholder="11 cifre"
+            required
+            aria-describedby="df-errore-partitaIva"
+          >
+          <p class="df-errore" id="df-errore-partitaIva" role="alert"></p>
         </div>
 
         {%- comment -%}
-          Con un'opzione preselezionata dal form non arriva mai un tipo mancante;
-          resta per l'altra strada del validatore, quella sui dati gia' nel carrello.
+          Mostrato solo alle persone fisiche: per le società il codice fiscale coincide
+          con la partita IVA e chiederlo due volte confonde e basta.
         {%- endcomment -%}
-        <p class="df-errore" id="df-errore-tipoCliente" role="alert"></p>
-      </fieldset>
-
-      <div class="df-campo">
-        <label for="df-ragione-sociale" id="df-etichetta-ragione-sociale">Ragione sociale</label>
-        <input
-          type="text"
-          id="df-ragione-sociale"
-          name="ragioneSociale"
-          autocomplete="organization"
-          required
-          aria-describedby="df-errore-ragioneSociale"
-        >
-        <p class="df-errore" id="df-errore-ragioneSociale" role="alert"></p>
-      </div>
-
-      <div class="df-campo">
-        <label for="df-partita-iva">Partita IVA</label>
-        <input
-          type="text"
-          id="df-partita-iva"
-          name="partitaIva"
-          inputmode="numeric"
-          maxlength="16"
-          placeholder="11 cifre"
-          required
-          aria-describedby="df-errore-partitaIva"
-        >
-        <p class="df-errore" id="df-errore-partitaIva" role="alert"></p>
+        <div class="df-campo" id="df-campo-codice-fiscale" hidden>
+          <label for="df-codice-fiscale">Codice fiscale del titolare</label>
+          <input
+            type="text"
+            id="df-codice-fiscale"
+            name="codiceFiscale"
+            maxlength="16"
+            placeholder="16 caratteri"
+            autocapitalize="characters"
+            autocomplete="off"
+            spellcheck="false"
+            aria-describedby="df-errore-codiceFiscale"
+          >
+          <p class="df-errore" id="df-errore-codiceFiscale" role="alert"></p>
+        </div>
       </div>
 
       {%- comment -%}
-        Mostrato solo alle persone fisiche: per le società il codice fiscale coincide
-        con la partita IVA e chiederlo due volte confonde e basta.
+        Un div con role="group" e non un fieldset con legend: la legend viene
+        disegnata sul bordo del fieldset, e su un fieldset con sfondo e senza bordo
+        finisce a filo del margine superiore del pannello, in modo diverso da
+        browser a browser. Per le tecnologie assistive i due sono equivalenti.
       {%- endcomment -%}
-      <div class="df-campo" id="df-campo-codice-fiscale" hidden>
-        <label for="df-codice-fiscale">Codice fiscale del titolare</label>
-        <input
-          type="text"
-          id="df-codice-fiscale"
-          name="codiceFiscale"
-          maxlength="16"
-          placeholder="16 caratteri"
-          autocapitalize="characters"
-          autocomplete="off"
-          spellcheck="false"
-          aria-describedby="df-errore-codiceFiscale"
-        >
-        <p class="df-errore" id="df-errore-codiceFiscale" role="alert"></p>
-      </div>
-
-      <hr class="df-separatore">
-
-      <fieldset class="df-recapito" aria-describedby="df-errore-recapito">
-        <legend>Recapito per la fattura</legend>
+      <div
+        class="df-pannello df-recapito"
+        role="group"
+        aria-labelledby="df-recapito-titolo"
+        aria-describedby="df-errore-recapito"
+      >
+        <p class="df-pannello__titolo" id="df-recapito-titolo">Recapito per la fattura</p>
         <p class="df-errore" id="df-errore-recapito" role="alert"></p>
 
         <div class="df-campo">
@@ -135,8 +150,7 @@
           >
           <p class="df-errore" id="df-errore-pec" role="alert"></p>
         </div>
-
-      </fieldset>
+      </div>
 
       <p class="df-errore df-errore--generale" id="df-errore-generale" role="alert"></p>
 

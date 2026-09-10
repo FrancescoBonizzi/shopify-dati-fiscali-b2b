@@ -472,6 +472,17 @@ function applicaColori() {
   const radice = document.documentElement.style;
   radice.setProperty('--df-raggio', `${config.raggioBordi ?? 8}px`);
 
+  // Testo e sfondo del modale seguono il body del tema, in entrambe le modalita':
+  // i grigi del modale (pannelli, bordi, etichette) sono derivati da questi due
+  // in CSS, e su un tema blu notte devono venire blu notte. Solo se sono
+  // entrambi pienamente opachi: con uno solo dei due si rischia testo chiaro su
+  // fondo chiaro, e il ripiego nero su bianco e' sempre leggibile.
+  const superficie = coloriSuperficieDalTema();
+  if (superficie) {
+    radice.setProperty('--df-testo', superficie.testo);
+    radice.setProperty('--df-sfondo', superficie.sfondo);
+  }
+
   const manuale = () => {
     if (config.colorePrimario) radice.setProperty('--df-primario', config.colorePrimario);
     if (config.coloreTestoPrimario) {
@@ -496,6 +507,16 @@ function applicaColori() {
   log('colori copiati dal tema', dalTema);
 }
 
+/** Colore del testo e dello sfondo della pagina: dal body, o in ripiego da <html>. */
+function coloriSuperficieDalTema() {
+  const testo = window.getComputedStyle(document.body).color;
+  const sfondo = [document.body, document.documentElement]
+    .map((elemento) => window.getComputedStyle(elemento).backgroundColor)
+    .find(pienamenteOpaco);
+  if (!pienamenteOpaco(testo) || !sfondo) return null;
+  return { testo, sfondo };
+}
+
 /** Copia i colori dal primo bottone "primario" reale che troviamo nel tema. */
 function coloriDalTema() {
   const candidati = [
@@ -517,9 +538,26 @@ function coloriDalTema() {
   return null;
 }
 
+/** Alfa di un colore come lo restituisce getComputedStyle: rgb()/rgba(), con le
+ *  virgole o con la barra. 1 se il canale manca o il formato non e' riconosciuto.
+ *  Non si prende "l'ultimo numero prima della parentesi": in rgb(0, 0, 0) quello
+ *  e' il blu, e il nero puro risultava trasparente. */
+function alfaDi(colore) {
+  if (!colore || colore === 'transparent') return 0;
+  const m = colore.match(
+    /^rgba?\(\s*[\d.]+\s*[, ]\s*[\d.]+\s*[, ]\s*[\d.]+\s*(?:[,/]\s*([\d.]+)(%?)\s*)?\)$/,
+  );
+  if (!m || m[1] === undefined) return 1;
+  const alfa = Number.parseFloat(m[1]);
+  return m[2] ? alfa / 100 : alfa;
+}
+
+/** Abbastanza opaco da essere un colore di sfondo, e non un velo. */
 function opaco(colore) {
-  if (!colore) return false;
-  if (colore === 'transparent') return false;
-  const alfa = colore.match(/rgba?\([^)]*?,\s*([\d.]+)\s*\)/);
-  return !alfa || Number.parseFloat(alfa[1]) > 0.1;
+  return alfaDi(colore) > 0.1;
+}
+
+/** Senza tolleranza: un testo al 75% di alfa non va copiato negli input. */
+function pienamenteOpaco(colore) {
+  return alfaDi(colore) >= 0.99;
 }
